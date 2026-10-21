@@ -1,0 +1,15 @@
+TO run the emulator 
+
+```
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+$env:ANDROID_AVD_HOME = 'E:\Loopi\qa_avds'
+Start-Process -FilePath "$sdk\emulator\emulator.exe" -ArgumentList @('-avd', 'LoopiQA', '-no-snapshot', '-no-audio', '-gpu', 'swiftshader_indirect')
+```
+
+after emulator gets start run this 
+```
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+$adb = "$sdk\platform-tools\adb.exe"
+& $adb devices
+.\run_loopi.bat
+```
