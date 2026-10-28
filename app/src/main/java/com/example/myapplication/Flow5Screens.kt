@@ -91,6 +91,30 @@ internal fun accuracyBuckets(results: List<ReviewResultEntity>, period: Progress
     }
 }
 
+internal data class Calibration(val score: Int, val overconfident: Int, val underconfident: Int, val rated: Int)
+
+/**
+ * How well confidence ratings match real results: "I know it" should be right and
+ * "Not sure" should be wrong. "Maybe" counts as half a match either way.
+ */
+internal fun calculateCalibration(results: List<ReviewResultEntity>): Calibration? {
+    val rated = results.filter { it.confidence in setOf("I know it", "Maybe", "Not sure") }
+    if (rated.isEmpty()) return null
+    val points = rated.sumOf { record ->
+        when (record.confidence) {
+            "I know it" -> if (record.isCorrect) 1.0 else 0.0
+            "Not sure" -> if (record.isCorrect) 0.0 else 1.0
+            else -> 0.5
+        }
+    }
+    return Calibration(
+        score = (points * 100 / rated.size).roundToInt(),
+        overconfident = rated.count { it.confidence == "I know it" && !it.isCorrect },
+        underconfident = rated.count { it.confidence == "Not sure" && it.isCorrect },
+        rated = rated.size
+    )
+}
+
 @Composable
 fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppState, flow4State: Flow4AppState) {
     var period by remember { mutableStateOf(ProgressPeriod.Week) }
@@ -146,6 +170,49 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
                     ProgressMetric("Accuracy", overall?.let { "$it%" } ?: "—", Modifier.weight(1f))
                     ProgressMetric("Correct", correct.toString(), Modifier.weight(1f))
                     ProgressMetric("Incorrect", incorrect.toString(), Modifier.weight(1f))
+                }
+            }
+            val weakest = topicRows.filter { (it.third ?: 100) < 70 }.minByOrNull { it.third ?: 100 }
+            if (weakest != null) {
+                item {
+                    Card(colors = CardDefaults.cardColors(containerColor = LoopiColors.RedSoft), shape = RoundedCornerShape(16.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Weak spot", color = ProgressRed, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("${weakest.first.title} is at ${weakest.third}%", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text("A short practice round will help it stick.", color = ProgressMuted, fontSize = 12.sp)
+                            }
+                            Button(onClick = { navController.navigate("review_settings/${weakest.first.id}") }, colors = ButtonDefaults.buttonColors(containerColor = ProgressRed)) {
+                                Text("Practice")
+                            }
+                        }
+                    }
+                }
+            }
+            val calibration = calculateCalibration(filteredResults)
+            item {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(15.dp)) {
+                        Text("Confidence check", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        if (calibration == null) {
+                            Text("Rate how sure you are during a review to see how well your confidence matches your results.", color = ProgressMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+                        } else {
+                            Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = 6.dp)) {
+                                Text("${calibration.score}%", color = ProgressBlue, fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                                Text("  calibration from ${calibration.rated} rated answers", color = ProgressMuted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp))
+                            }
+                            LoopiProgressBar(progress = { calibration.score / 100f }, modifier = Modifier.fillMaxWidth().height(7.dp).padding(top = 0.dp))
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                when {
+                                    calibration.overconfident > calibration.underconfident -> "You were sure but wrong ${calibration.overconfident} time(s). Slow down on cards that feel easy."
+                                    calibration.underconfident > 0 -> "You were right ${calibration.underconfident} time(s) when unsure. You know more than you think."
+                                    else -> "Your confidence matches your results well."
+                                },
+                                color = ProgressNavy, fontSize = 13.sp
+                            )
+                        }
+                    }
                 }
             }
             item {
@@ -579,12 +646,12 @@ private fun ProgressTopicCard(title: String, answers: Int, percent: Int?, modifi
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f)) {
                     Text(title, color = ProgressNavy, fontWeight = FontWeight.Bold)
-                    Text(if (answers == 0) "Not practiced yet" else "$answers answers", color = ProgressMuted, fontSize = 12.sp)
+                    Text(if (answers == 0) "Not practiced yet" else if (answers == 1) "1 answer" else "$answers answers", color = ProgressMuted, fontSize = 12.sp)
                 }
                 Text(percent?.let { "$it%" } ?: "—", color = if (percent != null && percent < 70) ProgressRed else ProgressNavy, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(progress = { (percent ?: 0) / 100f }, modifier = Modifier.fillMaxWidth().height(7.dp), color = if (percent != null && percent < 70) ProgressRed else ProgressTeal, trackColor = LoopiColors.Track)
+            LoopiProgressBar(progress = { (percent ?: 0) / 100f }, modifier = Modifier.fillMaxWidth().height(7.dp), color = if (percent != null && percent < 70) ProgressRed else ProgressTeal, trackColor = LoopiColors.Track)
         }
     }
 }

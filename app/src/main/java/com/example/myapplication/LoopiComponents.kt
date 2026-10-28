@@ -2,6 +2,8 @@ package com.example.myapplication
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -146,6 +149,29 @@ fun TopicIconTile(
             contentDescription = null,
             tint = accent,
             modifier = Modifier.size(size * 0.52f)
+        )
+    }
+}
+
+/** Rounded progress bar without Material's end-of-track dot, used for every progress row. */
+@Composable
+fun LoopiProgressBar(
+    progress: () -> Float,
+    modifier: Modifier = Modifier,
+    color: Color = LoopiColors.Blue,
+    trackColor: Color = LoopiColors.Track
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(trackColor)
+    ) {
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(progress().coerceIn(0f, 1f))
+                .clip(RoundedCornerShape(50))
+                .background(color)
         )
     }
 }

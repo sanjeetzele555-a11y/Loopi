@@ -3308,7 +3308,7 @@ private fun FullTopicRow(
                         )
                 )
 
-                LinearProgressIndicator(
+                LoopiProgressBar(
                     progress = {
 
                         topic.progress

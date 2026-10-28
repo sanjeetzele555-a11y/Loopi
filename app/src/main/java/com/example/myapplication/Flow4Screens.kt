@@ -1777,218 +1777,300 @@ fun ReviewQuestionScreen(
             card.id,
             flow4State.sessionCards
         ) {
-
-            flow4State
-                .buildAnswerOptions(
-                    card
-                )
+            flow4State.buildAnswerOptions(card)
         }
+
+    // Answer and confidence are chosen first; the result is revealed only after "Check answer".
+    val revealed =
+        flow4State.lastAnswer?.flashcardId == card.id
+
+    val isLast =
+        flow4State.currentQuestionIndex >= flow4State.sessionCards.lastIndex
 
     Scaffold(
         containerColor =
             ReviewBackground,
 
         topBar = {
-
             ReviewTopBar(
-                title =
-                    topic?.title
-                        ?: "Review",
-
-                onBack = {
-
-                    navController
-                        .popBackStack()
-                }
+                title = topic?.title ?: "Review",
+                onBack = { navController.popBackStack() }
             )
+        },
+
+        bottomBar = {
+            Surface(color = Color.White, shadowElevation = 8.dp) {
+                Button(
+                    onClick = {
+                        if (!revealed) {
+                            flow4State.commitCurrentAnswer()
+                        } else if (!flow4State.moveToNextQuestion()) {
+                            navController.navigate(
+                                if (flow4State.practiceMode) "review_practice_complete/$topicId"
+                                else "review_complete/$topicId"
+                            ) {
+                                popUpTo("review_question/$topicId") { inclusive = true }
+                            }
+                        }
+                    },
+                    enabled = revealed ||
+                            (flow4State.selectedAnswer != null && flow4State.selectedConfidence != null),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ReviewBrightBlue),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 18.dp, vertical = 12.dp)
+                        .height(54.dp)
+                ) {
+                    Text(
+                        text = when {
+                            !revealed && flow4State.selectedAnswer == null -> "Choose an answer"
+                            !revealed && flow4State.selectedConfidence == null -> "Rate your confidence"
+                            !revealed -> "Check answer"
+                            isLast -> "See results"
+                            else -> "Next question"
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
         }
-    ) {
-            innerPadding ->
+    ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    innerPadding
-                )
-                .padding(
-                    horizontal =
-                        18.dp
-                )
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp)
         ) {
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        10.dp
-                    )
-            )
+            Spacer(Modifier.height(10.dp))
 
             ReviewProgressHeader(
-                current =
-                    flow4State
-                        .currentQuestionIndex +
-                            1,
-
-                total =
-                    flow4State
-                        .sessionCards
-                        .size
+                current = flow4State.currentQuestionIndex + 1,
+                total = flow4State.sessionCards.size
             )
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        26.dp
-                    )
-            )
+            Spacer(Modifier.height(22.dp))
 
             Text(
-                text =
-                    "What is the answer?",
-
-                fontSize =
-                    13.sp,
-
-                color =
-                    Color.Gray
+                text = card.question,
+                fontSize = 21.sp,
+                lineHeight = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = ReviewBlue
             )
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        7.dp
-                    )
-            )
+            Spacer(Modifier.height(18.dp))
 
-            Text(
-                text =
-                    card.question,
-
-                fontSize =
-                    22.sp,
-
-                fontWeight =
-                    FontWeight.Bold,
-
-                color =
-                    ReviewBlue
-            )
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        24.dp
-                    )
-            )
-
-            options
-                .forEachIndexed {
-                        index,
-                        option ->
-
-                    val selected =
-                        flow4State
-                            .selectedAnswer ==
-                                option
-
-                    AnswerOptionCard(
-                        letter =
-                            (
-                                    'A'.code +
-                                            index
-                                    )
-                                .toChar()
-                                .toString(),
-
-                        text =
-                            option,
-
-                        selected =
-                            selected,
-
-                        onClick = {
-
-                            flow4State
-                                .selectAnswer(
-                                    option
-                                )
-                        }
-                    )
-
-                    Spacer(
-                        modifier =
-                            Modifier.height(
-                                10.dp
-                            )
-                    )
-                }
-
-            Spacer(
-                modifier =
-                    Modifier.weight(
-                        1f
-                    )
-            )
-
-            Button(
-                onClick = {
-
-                    if (
-                        flow4State
-                            .currentAnswerCorrect()
-                    ) {
-
-                        navController
-                            .navigate(
-                                "review_correct/$topicId"
-                            )
-
-                    } else {
-
-                        navController
-                            .navigate(
-                                "review_incorrect/$topicId"
-                            )
-                    }
-                },
-
-                enabled =
-                    flow4State
-                        .selectedAnswer !=
-                            null,
-
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(
-                        52.dp
-                    ),
-
-                colors =
-                    ButtonDefaults
-                        .buttonColors(
-                            containerColor =
-                                ReviewBrightBlue
-                        )
-            ) {
-
-                Text(
-                    text =
-                        "Submit Answer",
-
-                    fontWeight =
-                        FontWeight.Bold
+            options.forEachIndexed { index, option ->
+                val isCorrectOption = option.trim().equals(card.answer.trim(), ignoreCase = true)
+                val isChosen = flow4State.selectedAnswer == option
+                QuizOptionRow(
+                    letter = ('A'.code + index).toChar().toString(),
+                    text = option,
+                    state = when {
+                        !revealed && isChosen -> QuizOptionState.Selected
+                        !revealed -> QuizOptionState.Idle
+                        isCorrectOption -> QuizOptionState.Correct
+                        isChosen -> QuizOptionState.Wrong
+                        else -> QuizOptionState.Dimmed
+                    },
+                    onClick = { if (!revealed) flow4State.selectAnswer(option) }
                 )
+                Spacer(Modifier.height(10.dp))
             }
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        18.dp
-                    )
+            if (!revealed) {
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "How sure are you?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = ReviewBlue
+                )
+
+                Text(
+                    text = "Rate it before you see the answer. Loopi compares it with your result.",
+                    fontSize = 12.sp,
+                    color = LoopiColors.Muted
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        Triple("Not sure", "😕", ReviewRed),
+                        Triple("Maybe", "🤔", ReviewYellow),
+                        Triple("I know it", "😎", ReviewGreen)
+                    ).forEach { (label, face, accent) ->
+                        val chosen = flow4State.selectedConfidence == label
+                        Surface(
+                            onClick = { flow4State.setConfidence(label) },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (chosen) accent.copy(alpha = 0.14f) else Color.White,
+                            border = androidx.compose.foundation.BorderStroke(
+                                if (chosen) 2.dp else 1.dp,
+                                if (chosen) accent else ReviewBorder
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            ) {
+                                Text(face, fontSize = 24.sp)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    label,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (chosen) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (chosen) ReviewBlue else LoopiColors.Muted
+                                )
+                            }
+                        }
+                    }
+                }
+
+            } else {
+
+                val answer = flow4State.lastAnswer
+                val correct = answer?.isCorrect == true
+
+                Spacer(Modifier.height(8.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (correct) ReviewLightGreen else ReviewLightRed
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Text(
+                            text = if (correct) "✓  Correct!" else "✗  Not quite",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp,
+                            color = if (correct) ReviewGreen else ReviewRed
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = calibrationMessage(correct, answer?.confidence.orEmpty()),
+                            fontSize = 13.sp,
+                            color = ReviewBlue
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = LoopiColors.BlueSoft
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Text(
+                            text = "💡  Explain simply",
+                            fontWeight = FontWeight.Bold,
+                            color = ReviewBlue
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = card.explanation.ifBlank {
+                                "The correct answer is \"${card.answer.trim()}\"."
+                            },
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            color = LoopiColors.Ink
+                        )
+                        if (!correct) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = "Correct answer: ${card.answer.trim()}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ReviewGreen
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+private enum class QuizOptionState { Idle, Selected, Correct, Wrong, Dimmed }
+
+@Composable
+private fun QuizOptionRow(
+    letter: String,
+    text: String,
+    state: QuizOptionState,
+    onClick: () -> Unit
+) {
+    val neutral = state == QuizOptionState.Idle || state == QuizOptionState.Dimmed
+    val accent = when (state) {
+        QuizOptionState.Selected -> ReviewBrightBlue
+        QuizOptionState.Correct -> ReviewGreen
+        QuizOptionState.Wrong -> ReviewRed
+        else -> ReviewBorder
+    }
+    val fill = when (state) {
+        QuizOptionState.Selected -> LoopiColors.BlueSoft
+        QuizOptionState.Correct -> ReviewLightGreen
+        QuizOptionState.Wrong -> ReviewLightRed
+        else -> Color.White
+    }
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = fill,
+        border = androidx.compose.foundation.BorderStroke(if (neutral) 1.dp else 2.dp, accent),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(if (neutral) ReviewBackground else accent, CircleShape)
+            ) {
+                Text(
+                    text = when (state) {
+                        QuizOptionState.Correct -> "✓"
+                        QuizOptionState.Wrong -> "✗"
+                        else -> letter
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = if (neutral) ReviewBlue else Color.White
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = text,
+                fontSize = 15.sp,
+                color = if (state == QuizOptionState.Dimmed) LoopiColors.Muted else LoopiColors.Ink,
+                modifier = Modifier.weight(1f)
             )
         }
     }
+}
+
+/** Compares how sure the learner said they were with how they actually did. */
+internal fun calibrationMessage(correct: Boolean, confidence: String): String = when {
+    correct && confidence == "I know it" -> "You were sure and you were right. Well calibrated."
+    correct && confidence == "Not sure" -> "You knew more than you thought. Trust yourself a little more."
+    correct -> "Right answer. One more review will make it stick."
+    confidence == "I know it" -> "You felt sure, but this one needs another look. Added to your weak spots."
+    else -> "Good call flagging this. It's been added to your weak spots."
 }
 
 
@@ -3898,7 +3980,7 @@ fun ReviewTopicPerformanceScreen(
                                 )
                         )
 
-                        LinearProgressIndicator(
+                        LoopiProgressBar(
                             progress = {
                                 percentage
                             },
@@ -5030,7 +5112,7 @@ private fun ReviewProgressHeader(
                 )
         )
 
-        LinearProgressIndicator(
+        LoopiProgressBar(
             progress = {
 
                 if (
@@ -5067,7 +5149,7 @@ private fun ReviewProgressHeader(
                 ),
 
             color =
-                ReviewYellow,
+                ReviewBrightBlue,
 
             trackColor =
                 Color(
