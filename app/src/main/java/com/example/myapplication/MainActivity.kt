@@ -83,12 +83,18 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                val community =
+                    remember {
+                        CommunityState(applicationContext)
+                    }
+
                 LoopiNavigation(
                     navController = navController,
                     appState = appState,
                     flow3State = flow3State,
                     flow4State = flow4State,
-                    flow6State = flow6State
+                    flow6State = flow6State,
+                    community = community
                 )
             }
         }
@@ -102,7 +108,8 @@ fun LoopiNavigation(
     appState: LoopiAppState,
     flow3State: Flow3AppState,
     flow4State: Flow4AppState,
-    flow6State: Flow6AppState
+    flow6State: Flow6AppState,
+    community: CommunityState
 ) {
 
     NavHost(
@@ -1333,7 +1340,20 @@ fun LoopiNavigation(
         }
 
         composable("settings") { Flow6SettingsScreen(navController) }
-        composable("help_support") { Flow6HelpSupportScreen(navController) }
+        composable("help_support") { HelpSupportScreen(navController) }
+        composable("report_problem") { ReportProblemScreen(navController) }
+
+        /* =====================================================
+           FLOW 7 — COMMUNITY
+           ===================================================== */
+
+        composable("community") { CommunityScreen(navController, community) }
+        composable(
+            route = "community_group/{groupId}",
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) { entry ->
+            CommunityGroupScreen(navController, community, entry.arguments?.getString("groupId").orEmpty())
+        }
     }
 }
 

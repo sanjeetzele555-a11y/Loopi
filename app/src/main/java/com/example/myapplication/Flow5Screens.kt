@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -404,6 +405,7 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
                 showEditName = true
             })
             ProfileMenuRow(Icons.Rounded.Inventory2, "My Study Packs", onClick = { navController.navigate("study_packs") })
+            ProfileMenuRow(Icons.Rounded.Groups, "Community", onClick = { navController.navigate("community") })
             ProfileMenuRow(Icons.Rounded.Settings, "Settings", onClick = { navController.navigate("settings") })
             ProfileMenuRow(Icons.AutoMirrored.Rounded.HelpOutline, "Help & Support", onClick = { navController.navigate("help_support") })
             ProfileMenuRow(Icons.AutoMirrored.Rounded.Logout, "Log out", destructive = true, onClick = { showSignOutConfirmation = true })
@@ -609,46 +611,6 @@ private fun SettingsToggle(title: String, detail: String, checked: Boolean, onCh
     }
 }
 
-@Composable
-fun Flow6HelpSupportScreen(navController: NavHostController) {
-    var expanded by remember { mutableStateOf<String?>(null) }
-    var showFeedback by remember { mutableStateOf(false) }
-    var feedback by remember { mutableStateOf("") }
-    var submitted by remember { mutableStateOf(false) }
-    val questions = listOf(
-        "Where is my study data saved?" to "Your profile, topics, resources, and review history are stored on this device. This version does not sync to a server.",
-        "How are progress charts calculated?" to "Charts use saved review answers and their recorded response times. No answers means the chart has no accuracy value yet.",
-        "Can I use Loopi offline?" to "Yes. The study library and saved progress are available offline on this device."
-    )
-    Scaffold(containerColor = ProgressBackground) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ProgressHeader("Help & Support", onBack = { navController.popBackStack() })
-            Text("Frequently asked questions", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 19.sp)
-            questions.forEach { (question, answer) ->
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().clickable { expanded = if (expanded == question) null else question }, shape = RoundedCornerShape(16.dp)) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(question, color = ProgressNavy, fontWeight = FontWeight.SemiBold)
-                        if (expanded == question) Text(answer, color = ProgressMuted, fontSize = 13.sp)
-                    }
-                }
-            }
-            Button(onClick = { submitted = false; showFeedback = true }, modifier = Modifier.fillMaxWidth().height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = ProgressNavy), shape = RoundedCornerShape(15.dp)) {
-                Text("Send feedback")
-            }
-            Text("Feedback is not sent or retained after leaving this screen; no support server is connected.", color = ProgressMuted, fontSize = 12.sp)
-        }
-    }
-    if (showFeedback) AlertDialog(
-        onDismissRequest = { showFeedback = false },
-        title = { Text(if (submitted) "Feedback saved" else "Send feedback") },
-        text = {
-            if (submitted) Text("Your feedback was saved for this session. This demo is not connected to a support service.")
-            else OutlinedTextField(value = feedback, onValueChange = { feedback = it }, label = { Text("Your feedback") }, minLines = 3)
-        },
-        confirmButton = { TextButton(onClick = { if (submitted) showFeedback = false else if (feedback.isNotBlank()) submitted = true }) { Text(if (submitted) "Done" else "Save") } },
-        dismissButton = { if (!submitted) TextButton(onClick = { showFeedback = false }) { Text("Cancel") } }
-    )
-}
 @Composable
 private fun ProgressHeader(title: String, onBack: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
