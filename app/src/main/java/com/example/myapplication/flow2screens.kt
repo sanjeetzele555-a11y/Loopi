@@ -3207,16 +3207,7 @@ private fun CompactTopicRow(
             )
         }
 
-        Text(
-            text =
-                "›",
-
-            fontSize =
-                24.sp,
-
-            color =
-                Flow2Blue
-        )
+        LoopiChevron()
     }
 }
 
@@ -3360,16 +3351,7 @@ private fun FullTopicRow(
                         Flow2Blue
                 )
 
-                Text(
-                    text =
-                        "›",
-
-                    fontSize =
-                        22.sp,
-
-                    color =
-                        Flow2Blue
-                )
+                LoopiChevron()
             }
         }
     }
@@ -3409,16 +3391,7 @@ private fun LoopiTopBar(
                     onBack
             ) {
 
-                Text(
-                    text =
-                        "←",
-
-                    fontSize =
-                        24.sp,
-
-                    color =
-                        Flow2Blue
-                )
+                LoopiBackIcon()
             }
 
         } else {

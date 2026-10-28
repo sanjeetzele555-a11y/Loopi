@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.AccountTree
 import androidx.compose.material.icons.rounded.BarChart
@@ -175,3 +177,16 @@ fun LoopiProgressBar(
         )
     }
 }
+
+@Composable
+fun LoopiBackIcon(tint: Color = LoopiColors.Navy) {
+    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = tint)
+}
+
+@Composable
+fun LoopiChevron(tint: Color = LoopiColors.Muted) {
+    Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = tint)
+}
+
+/** "1 card", "3 cards". */
+fun countLabel(count: Int, noun: String): String = if (count == 1) "1 $noun" else "$count ${noun}s"

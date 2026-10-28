@@ -2135,11 +2135,7 @@ private fun AuthPage(
             }
         ) {
 
-            Text(
-                text = "←",
-                fontSize = 24.sp,
-                color = LoopiBlue
-            )
+            LoopiBackIcon(LoopiBlue)
         }
 
         Spacer(

@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import androidx.room.withTransaction
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -38,7 +40,10 @@ private val PackBackground = LoopiColors.Background
 private val PackMuted = LoopiColors.Muted
 
 class Flow6AppState(context: android.content.Context, private val scope: CoroutineScope) {
-    private val dao = LoopiDatabase.getDatabase(context.applicationContext).studyPackDao()
+    private val database = LoopiDatabase.getDatabase(context.applicationContext)
+    private val dao = database.studyPackDao()
+    private val topicDao = database.topicDao()
+    private val flashcardDao = database.flashcardDao()
     val packs = mutableStateListOf<StudyPackEntity>()
     val draftTopicNames: SnapshotStateList<String> = mutableStateListOf()
     var packsLoaded by mutableStateOf(false)
@@ -108,50 +113,140 @@ class Flow6AppState(context: android.content.Context, private val scope: Corouti
         }
     }
 
-    fun importPack(json: String) {
-        val imported = runCatching {
-            val root = JSONObject(json)
-            require(root.optString("type") == "loopi_study_pack") { "This file is not a Loopi study pack." }
-            require(root.optInt("version", -1) == 1) { "This study pack version is not supported." }
-            val name = root.optString("name").trim()
-            require(name.isNotEmpty()) { "The imported pack has no name." }
-            val sourceTopics = root.optJSONArray("topics") ?: JSONArray()
-            val names = mutableListOf<String>()
-            for (i in 0 until sourceTopics.length()) {
-                val title = sourceTopics.optString(i).trim()
-                if (title.isNotEmpty() && title !in names) names.add(title)
+    /** Builds a v2 export that carries the topics' flashcards, so a pack works on a device that has none of them. */
+    suspend fun buildExport(pack: StudyPackEntity): String {
+        val names = packTopicNames(pack)
+        val cards = flashcardDao.getAllFlashcards().first()
+        val topicData = JSONArray()
+        names.forEach { title ->
+            val topic = topicDao.getTopicByTitle(title) ?: return@forEach
+            val topicCards = JSONArray()
+            cards.filter { it.topicId == topic.id }.forEach { card ->
+                topicCards.put(
+                    JSONObject()
+                        .put("question", card.question)
+                        .put("answer", card.answer)
+                        .put("explanation", card.explanation)
+                )
             }
-            require(names.isNotEmpty()) { "The imported pack has no topics." }
-            StudyPackEntity(
-                name = name,
-                description = root.optString("description").trim(),
-                topicNamesJson = JSONArray(names).toString()
+            topicData.put(
+                JSONObject()
+                    .put("title", topic.title)
+                    .put("description", topic.description)
+                    .put("category", topic.category)
+                    .put("difficulty", topic.difficulty)
+                    .put("cards", topicCards)
             )
-        }.getOrElse {
+        }
+        return JSONObject()
+            .put("type", "loopi_study_pack")
+            .put("version", 2)
+            .put("name", pack.name)
+            .put("description", pack.description)
+            .put("topics", JSONArray(names))
+            .put("topicData", topicData)
+            .put("exportedAt", System.currentTimeMillis())
+            .toString(2)
+    }
+
+    fun importPack(json: String) {
+        val parsed = runCatching { parseStudyPack(json) }.getOrElse {
             statusMessage = it.message ?: "This study pack file could not be read."
             return
         }
         scope.launch {
-            runCatching { dao.insertStudyPack(imported).toInt() }
-                .onSuccess { statusMessage = "${imported.name} imported." }
+            runCatching {
+                var newTopics = 0
+                var newCards = 0
+                database.withTransaction {
+                    parsed.topics.forEach { shared ->
+                        // Topics that already exist on this device are kept as they are.
+                        if (topicDao.getTopicByTitle(shared.title) != null) return@forEach
+                        val topicId = topicDao.insertTopic(
+                            TopicEntity(
+                                title = shared.title,
+                                description = shared.description.ifBlank { "Imported from ${parsed.pack.name}" },
+                                category = shared.category.ifBlank { "Other" },
+                                difficulty = shared.difficulty.ifBlank { "Medium" },
+                                numberOfCards = shared.cards.size,
+                                targetCardCount = shared.cards.size
+                            )
+                        ).toInt()
+                        newTopics++
+                        shared.cards.forEach { card ->
+                            flashcardDao.insertFlashcard(
+                                FlashcardEntity(
+                                    topicId = topicId,
+                                    question = card.question,
+                                    answer = card.answer,
+                                    explanation = card.explanation
+                                )
+                            )
+                            newCards++
+                        }
+                    }
+                    dao.insertStudyPack(parsed.pack)
+                }
+                newTopics to newCards
+            }
+                .onSuccess { (topics, cards) ->
+                    statusMessage = if (topics > 0) "${parsed.pack.name} imported with ${countLabel(topics, "new topic")} and ${countLabel(cards, "card")}."
+                    else "${parsed.pack.name} imported."
+                }
                 .onFailure { statusMessage = "Could not save the imported study pack." }
         }
     }
+}
+
+internal data class SharedCard(val question: String, val answer: String, val explanation: String)
+internal data class SharedTopic(val title: String, val description: String, val category: String, val difficulty: String, val cards: List<SharedCard>)
+internal data class ParsedStudyPack(val pack: StudyPackEntity, val topics: List<SharedTopic>)
+
+/** Reads v1 (topic names only) and v2 (topics with flashcards) pack files. */
+internal fun parseStudyPack(json: String): ParsedStudyPack {
+    val root = JSONObject(json)
+    require(root.optString("type") == "loopi_study_pack") { "This file is not a Loopi study pack." }
+    require(root.optInt("version", -1) in 1..2) { "This study pack version is not supported." }
+    val name = root.optString("name").trim()
+    require(name.isNotEmpty()) { "The imported pack has no name." }
+    val sourceTopics = root.optJSONArray("topics") ?: JSONArray()
+    val names = mutableListOf<String>()
+    for (i in 0 until sourceTopics.length()) {
+        val title = sourceTopics.optString(i).trim()
+        if (title.isNotEmpty() && title !in names) names.add(title)
+    }
+    val topics = mutableListOf<SharedTopic>()
+    val topicData = root.optJSONArray("topicData") ?: JSONArray()
+    for (i in 0 until topicData.length()) {
+        val item = topicData.optJSONObject(i) ?: continue
+        val title = item.optString("title").trim()
+        if (title.isEmpty()) continue
+        val cardArray = item.optJSONArray("cards") ?: JSONArray()
+        val cards = (0 until cardArray.length()).mapNotNull { index ->
+            val card = cardArray.optJSONObject(index) ?: return@mapNotNull null
+            val question = card.optString("question").trim()
+            val answer = card.optString("answer").trim()
+            if (question.isEmpty() || answer.isEmpty()) null
+            else SharedCard(question, answer, card.optString("explanation").trim())
+        }
+        topics.add(SharedTopic(title, item.optString("description").trim(), item.optString("category").trim(), item.optString("difficulty").trim(), cards))
+        if (title !in names) names.add(title)
+    }
+    require(names.isNotEmpty()) { "The imported pack has no topics." }
+    return ParsedStudyPack(
+        pack = StudyPackEntity(
+            name = name,
+            description = root.optString("description").trim(),
+            topicNamesJson = JSONArray(names).toString()
+        ),
+        topics = topics
+    )
 }
 
 private fun packTopicNames(pack: StudyPackEntity): List<String> = runCatching {
     val array = JSONArray(pack.topicNamesJson)
     List(array.length()) { array.getString(it) }
 }.getOrDefault(emptyList())
-
-private fun packJson(pack: StudyPackEntity): String = JSONObject()
-    .put("type", "loopi_study_pack")
-    .put("version", 1)
-    .put("name", pack.name)
-    .put("description", pack.description)
-    .put("topics", JSONArray(packTopicNames(pack)))
-    .put("exportedAt", System.currentTimeMillis())
-    .toString(2)
 
 @Composable
 fun StudyPacksScreen(navController: NavHostController, flow6State: Flow6AppState) {
@@ -178,7 +273,7 @@ fun StudyPacksScreen(navController: NavHostController, flow6State: Flow6AppState
     Scaffold(
         containerColor = PackBackground,
         snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = { LoopiBottomNavigation(navController, selected = "home") }
+        bottomBar = { LoopiBottomNavigation(navController, selected = "profile") }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 18.dp)) {
             Flow6Header("Study Packs", onBack = { navController.popBackStack() }, showBack = false)
@@ -279,7 +374,7 @@ fun CreateStudyPackScreen(
                         )
                         if (topicsError) Text("Choose at least one topic.", color = MaterialTheme.colorScheme.error)
                     }
-                    Text("›", fontSize = 28.sp, color = PackBlue)
+                    LoopiChevron(PackBlue)
                 }
             }
             Spacer(Modifier.weight(1f))
@@ -358,6 +453,7 @@ fun StudyPackPreviewScreen(
     val pack = flow6State.packs.firstOrNull { it.id == packId }
     val snackbar = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val exportText by produceState("", pack) { value = pack?.let { flow6State.buildExport(it) }.orEmpty() }
     LaunchedEffect(flow6State.statusMessage) {
         val message = flow6State.statusMessage
         if (message.isNotBlank()) {
@@ -368,7 +464,7 @@ fun StudyPackPreviewScreen(
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri != null && pack != null) {
             val saved = runCatching {
-                context.contentResolver.openOutputStream(uri)?.use { it.write(packJson(pack).toByteArray(Charsets.UTF_8)) }
+                context.contentResolver.openOutputStream(uri)?.use { it.write(exportText.toByteArray(Charsets.UTF_8)) }
                     ?: error("Could not write to the selected location.")
             }
             saved.onSuccess { flow6State.showStatus("${pack.name} exported.") }
@@ -408,7 +504,7 @@ fun StudyPackPreviewScreen(
                             Text(pack.description, color = PackMuted)
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text("${topicNames.size} topics", color = PackBlue, fontWeight = FontWeight.Bold)
+                        Text(countLabel(topicNames.size, "topic"), color = PackBlue, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(10.dp))
                     }
                     items(topicNames) { title ->
@@ -432,7 +528,7 @@ fun StudyPackPreviewScreen(
                                 val send = Intent(Intent.ACTION_SEND).apply {
                                     type = "application/json"
                                     putExtra(Intent.EXTRA_SUBJECT, pack.name)
-                                    putExtra(Intent.EXTRA_TEXT, packJson(pack))
+                                    putExtra(Intent.EXTRA_TEXT, exportText)
                                 }
                                 context.startActivity(Intent.createChooser(send, "Share study pack"))
                             }, modifier = Modifier.weight(1f)) { Text("Share") }
@@ -472,10 +568,10 @@ private fun StudyPackCard(pack: StudyPackEntity, onClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(pack.name, color = PackNavy, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("$topicCount topics", color = PackMuted, fontSize = 12.sp)
+                Text(countLabel(topicCount, "topic"), color = PackMuted, fontSize = 12.sp)
                 if (pack.description.isNotBlank()) Text(pack.description, color = PackMuted, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp)
             }
-            Text("›", fontSize = 27.sp, color = PackMuted)
+            LoopiChevron(PackMuted)
         }
     }
 }
@@ -483,7 +579,7 @@ private fun StudyPackCard(pack: StudyPackEntity, onClick: () -> Unit) {
 @Composable
 private fun Flow6Header(title: String, onBack: () -> Unit, showBack: Boolean = true) {
     Row(Modifier.fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (showBack) TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) { Text("‹", fontSize = 30.sp, color = PackNavy) }
+        if (showBack) TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) { LoopiBackIcon(PackNavy) }
         else Spacer(Modifier.width(8.dp))
         Text(title, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PackNavy)
         if (showBack) Spacer(Modifier.width(42.dp)) else Spacer(Modifier.width(8.dp))

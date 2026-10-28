@@ -4987,16 +4987,7 @@ private fun ReviewTopBar(
                     onBack
             ) {
 
-                Text(
-                    text =
-                        "←",
-
-                    fontSize =
-                        24.sp,
-
-                    color =
-                        ReviewBlue
-                )
+                LoopiBackIcon(ReviewBlue)
             }
 
         } else {

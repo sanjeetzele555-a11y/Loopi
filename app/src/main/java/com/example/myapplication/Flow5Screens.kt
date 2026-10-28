@@ -16,6 +16,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Inventory2
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -360,7 +367,7 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Loopi", modifier = Modifier.weight(1f), color = ProgressNavy, fontWeight = FontWeight.ExtraBold, fontSize = 29.sp)
-                TextButton(onClick = { showSignOutConfirmation = true }) { Text("⇥", color = ProgressNavy, fontSize = 23.sp) }
+                IconButton(onClick = { showSignOutConfirmation = true }) { Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Log out", tint = ProgressNavy) }
             }
             Spacer(Modifier.height(14.dp))
             Box(Modifier.size(106.dp).clickable { imagePicker.launch(arrayOf("image/*")) }) {
@@ -374,16 +381,21 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
                     }
                 }
                 Surface(shape = RoundedCornerShape(50), color = ProgressBlue, modifier = Modifier.align(Alignment.BottomEnd).offset(2.dp, 2.dp).size(32.dp)) {
-                    Box(contentAlignment = Alignment.Center) { Text("✎", color = Color.White, fontSize = 15.sp) }
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Edit, contentDescription = "Change photo", tint = Color.White, modifier = Modifier.size(16.dp)) }
                 }
             }
             Spacer(Modifier.height(10.dp))
             Text(fullName.ifBlank { "Loopi learner" }, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 21.sp)
             Text(email, color = ProgressMuted, fontSize = 14.sp)
             Surface(shape = RoundedCornerShape(24.dp), color = LoopiColors.AmberSoft, modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)) {
-                Text("$streak-day streak 🔥", modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp), color = Color(0xFF855400), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text("$streak-day streak 🔥", modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp), color = Color(0xFF8A5A00), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
-            ProfileMenuRow("✎", "Edit Profile", onClick = {
+            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ProfileStat("${appState.topics.size}", "Topics", Modifier.weight(1f))
+                ProfileStat("${flow4State.allFlashcards.size}", "Cards", Modifier.weight(1f))
+                ProfileStat(calculateAccuracy(answers)?.let { "$it%" } ?: "—", "Accuracy", Modifier.weight(1f))
+            }
+            ProfileMenuRow(Icons.Rounded.Edit, "Edit Profile", onClick = {
                 draftName = fullName
                 draftEmail = email
                 draftStudentId = preferences.getString("student_id", "").orEmpty()
@@ -391,10 +403,10 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
                 nameError = null
                 showEditName = true
             })
-            ProfileMenuRow("▣", "My Study Packs", onClick = { navController.navigate("study_packs") })
-            ProfileMenuRow("⚙", "Settings", onClick = { navController.navigate("settings") })
-            ProfileMenuRow("?", "Help & Support", onClick = { navController.navigate("help_support") })
-            ProfileMenuRow("⇥", "Log out", destructive = true, onClick = { showSignOutConfirmation = true })
+            ProfileMenuRow(Icons.Rounded.Inventory2, "My Study Packs", onClick = { navController.navigate("study_packs") })
+            ProfileMenuRow(Icons.Rounded.Settings, "Settings", onClick = { navController.navigate("settings") })
+            ProfileMenuRow(Icons.AutoMirrored.Rounded.HelpOutline, "Help & Support", onClick = { navController.navigate("help_support") })
+            ProfileMenuRow(Icons.AutoMirrored.Rounded.Logout, "Log out", destructive = true, onClick = { showSignOutConfirmation = true })
             Spacer(Modifier.height(12.dp))
             Text("${answers.size} saved answers · $practiced of ${appState.topics.size} topics practiced · ${flow4State.allFlashcards.size} cards", color = ProgressMuted, fontSize = 12.sp)
         }
@@ -493,15 +505,31 @@ private fun ProfileActivityCard(title: String, value: String, caption: String, m
 }
 
 @Composable
-private fun ProfileMenuRow(icon: String, title: String, destructive: Boolean = false, onClick: () -> Unit) {
+private fun ProfileStat(value: String, label: String, modifier: Modifier = Modifier) {
+    Surface(modifier, shape = RoundedCornerShape(14.dp), color = ProgressBackground) {
+        Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(value, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(label, color = ProgressMuted, fontSize = 12.sp)
+        }
+    }
+}
+
+@Composable
+private fun ProfileMenuRow(icon: ImageVector, title: String, destructive: Boolean = false, onClick: () -> Unit) {
     val color = if (destructive) ProgressRed else ProgressNavy
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 16.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(icon, color = color, fontWeight = FontWeight.Bold, fontSize = 21.sp, modifier = Modifier.width(48.dp))
+        Box(
+            Modifier.size(40.dp).background(if (destructive) LoopiColors.RedSoft else LoopiColors.BlueSoft, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = if (destructive) ProgressRed else ProgressBlue, modifier = Modifier.size(22.dp))
+        }
+        Spacer(Modifier.width(14.dp))
         Text(title, modifier = Modifier.weight(1f), color = color, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-        if (!destructive) Text("›", color = ProgressMuted, fontSize = 25.sp)
+        if (!destructive) LoopiChevron(ProgressMuted)
     }
     HorizontalDivider(color = LoopiColors.Border)
 }
@@ -624,7 +652,7 @@ fun Flow6HelpSupportScreen(navController: NavHostController) {
 @Composable
 private fun ProgressHeader(title: String, onBack: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (onBack != null) TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) { Text("‹", color = ProgressNavy, fontSize = 30.sp) }
+        if (onBack != null) TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) { LoopiBackIcon(ProgressNavy) }
         Text(title, modifier = Modifier.weight(1f), color = ProgressNavy, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     }
 }

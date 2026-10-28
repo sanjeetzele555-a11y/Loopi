@@ -657,13 +657,7 @@ fun FlashcardsScreen(
                                     )
                                 }
 
-                                Text(
-                                    "›",
-                                    color =
-                                        F3Blue,
-                                    fontSize =
-                                        22.sp
-                                )
+                                LoopiChevron()
                             }
                         }
                     }
@@ -1686,13 +1680,7 @@ fun ResourcesScreen(
                                     }
                                 }
 
-                                Text(
-                                    "›",
-                                    color =
-                                        F3Blue,
-                                    fontSize =
-                                        22.sp
-                                )
+                                LoopiChevron()
                             }
                         }
                     }
@@ -2847,11 +2835,7 @@ private fun Flow3BackHeader(
             onClick = onBack
         ) {
 
-            Text(
-                "←",
-                fontSize = 24.sp,
-                color = F3Blue
-            )
+            LoopiBackIcon()
         }
 
         Text(
@@ -2935,11 +2919,7 @@ private fun TopicDetailRow(
             Modifier.width(10.dp)
         )
 
-        Text(
-            "›",
-            color = F3Blue,
-            fontSize = 22.sp
-        )
+        LoopiChevron()
     }
 
     HorizontalDivider()
