@@ -1,5 +1,23 @@
 package com.example.myapplication
 
+import android.app.Activity
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -190,3 +208,107 @@ fun LoopiChevron(tint: Color = LoopiColors.Muted) {
 
 /** "1 card", "3 cards". */
 fun countLabel(count: Int, noun: String): String = if (count == 1) "1 $noun" else "$count ${noun}s"
+
+private var activeHeroes = 0
+
+/** Lets a child ignore its parent's horizontal padding, so headers can run edge to edge. */
+fun Modifier.fullBleed(horizontal: Dp): Modifier = layout { measurable, constraints ->
+    val extra = horizontal.roundToPx() * 2
+    val width = constraints.maxWidth + extra
+    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
+}
+
+/**
+ * Gradient header used at the top of the main tabs. The gradient covers [height];
+ * content can run past it, so a summary card overlaps the bottom edge.
+ */
+@Composable
+fun LoopiHero(
+    horizontalPadding: Dp = 18.dp,
+    height: Dp = 220.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    // White status bar icons while the dark gradient sits under them.
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        // Counted, because the next tab's hero appears before the previous one is disposed.
+        activeHeroes++
+        controller?.isAppearanceLightStatusBars = false
+        onDispose {
+            activeHeroes--
+            if (activeHeroes == 0) controller?.isAppearanceLightStatusBars = true
+        }
+    }
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    Box(Modifier.fullBleed(horizontalPadding)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(height + statusBar)
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+                .background(Brush.linearGradient(listOf(LoopiColors.Navy, LoopiColors.Blue, Color(0xFF5B8DEF))))
+        ) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 60.dp, y = (-50).dp)
+                    .size(190.dp)
+                    .background(Color.White.copy(alpha = 0.08f), CircleShape)
+            )
+            Box(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .offset(x = (-40).dp, y = 30.dp)
+                    .size(130.dp)
+                    .background(Color.White.copy(alpha = 0.07f), CircleShape)
+            )
+        }
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding)
+                .padding(top = statusBar + 14.dp),
+            content = content
+        )
+    }
+}
+
+/** Coloured shortcut tile used in the Home quick actions row. */
+@Composable
+fun QuickActionTile(
+    icon: ImageVector,
+    label: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        shadowElevation = 2.dp,
+        modifier = modifier
+    ) {
+        Column(
+            Modifier.padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                Modifier
+                    .size(42.dp)
+                    .background(
+                        Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.7f))),
+                        RoundedCornerShape(14.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = LoopiColors.Navy, maxLines = 1)
+        }
+    }
+}

@@ -178,6 +178,7 @@ private fun GroupCard(group: StudyGroup, community: CommunityState, onClick: () 
     val joined = group.id in community.joined
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(18.dp),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
@@ -207,6 +208,7 @@ private fun GroupCard(group: StudyGroup, community: CommunityState, onClick: () 
 private fun PostCard(post: GroupPost, groupName: String?, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
@@ -264,7 +266,8 @@ fun CommunityGroupScreen(navController: NavHostController, community: CommunityS
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(20.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(20.dp)) {
                     Column(Modifier.fillMaxWidth().padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         TopicIconTile(title = group.topic, category = "", size = 64.dp)
                         Spacer(Modifier.height(10.dp))
@@ -398,6 +401,7 @@ private fun SectionTitle(text: String) {
 private fun HelpAction(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(18.dp),
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -421,6 +425,7 @@ private fun ExpandableCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {

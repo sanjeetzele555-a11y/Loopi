@@ -959,22 +959,11 @@ fun ChooseReviewTopicScreen(
 ) {
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+
         containerColor =
             ReviewBackground,
 
-        topBar = {
-
-            ReviewTopBar(
-                title =
-                    "Choose Topic",
-
-                onBack = {
-
-                    navController
-                        .popBackStack()
-                }
-            )
-        },
 
         bottomBar = {
 
@@ -1001,37 +990,10 @@ fun ChooseReviewTopicScreen(
                 )
         ) {
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        10.dp
-                    )
-            )
-
-            Text(
-                text =
-                    "Choose a topic to review",
-
-                fontSize =
-                    18.sp,
-
-                fontWeight =
-                    FontWeight.Bold,
-
-                color =
-                    ReviewBlue
-            )
-
-            Text(
-                text =
-                    "Select one of your study topics.",
-
-                fontSize =
-                    13.sp,
-
-                color =
-                    Color.Gray
-            )
+            LoopiHero(horizontalPadding = 18.dp, height = 96.dp) {
+                Text("Study", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+                Text("Pick a topic to start a quiz", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+            }
 
             Spacer(
                 modifier =
@@ -2242,6 +2204,7 @@ fun ReviewExplanationScreen(
                             containerColor =
                                 Color.White
                         ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 
                 shape =
                     RoundedCornerShape(
@@ -3747,7 +3710,8 @@ fun ReviewIncorrectQuestionsScreen(
                                 .cardColors(
                                     containerColor =
                                         Color.White
-                                )
+                                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
 
                         Column(
@@ -4416,7 +4380,8 @@ fun ReviewWeakSpotsScreen(
                                     .cardColors(
                                         containerColor =
                                             Color.White
-                                    )
+                                    ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
 
                             Row(
@@ -5618,7 +5583,8 @@ private fun ReviewSectionCard(
                 .cardColors(
                     containerColor =
                         Color.White
-                )
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
         Column(
@@ -5718,7 +5684,8 @@ private fun ReviewStatCard(
                 .cardColors(
                     containerColor =
                         Color.White
-                )
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
         Column(
@@ -5788,7 +5755,8 @@ private fun ResultRowCard(
                 .cardColors(
                     containerColor =
                         Color.White
-                )
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
         Row(
@@ -5937,7 +5905,8 @@ private fun ConfidenceAnalysisCard(
                 .cardColors(
                     containerColor =
                         Color.White
-                )
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
         Row(
@@ -6042,7 +6011,8 @@ private fun ReviewEmptyCard(
                 .cardColors(
                     containerColor =
                         Color.White
-                )
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
         Column(

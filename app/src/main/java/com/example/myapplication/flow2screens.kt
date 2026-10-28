@@ -1,5 +1,11 @@
 package com.example.myapplication
 
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Inventory2
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -506,6 +512,7 @@ fun Flow2HomeScreen(
         }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor =
             Flow2Background,
 
@@ -527,20 +534,19 @@ fun Flow2HomeScreen(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .padding(
-                    horizontal =
-                        18.dp
                 ),
 
             contentPadding =
                 PaddingValues(
-                    top = 18.dp,
+                    start = 18.dp,
+                    end = 18.dp,
                     bottom = 24.dp
                 )
         ) {
 
             item {
+
+                LoopiHero(horizontalPadding = 18.dp, height = 200.dp) {
 
                 Row(
                     modifier =
@@ -570,7 +576,7 @@ fun Flow2HomeScreen(
                                     .ExtraBold,
 
                             color =
-                                Flow2Blue
+                                Color.White
                         )
 
                         Text(
@@ -585,7 +591,7 @@ fun Flow2HomeScreen(
                                     .Bold,
 
                             color =
-                                Flow2Blue
+                                Color.White
                         )
 
                         Text(
@@ -596,7 +602,7 @@ fun Flow2HomeScreen(
                                 12.sp,
 
                             color =
-                                Color.Gray
+                                Color.White.copy(alpha = 0.8f)
                         )
                     }
 
@@ -613,7 +619,7 @@ fun Flow2HomeScreen(
                         Icon(
                             Icons.Outlined.Notifications,
                             contentDescription = "Notifications",
-                            tint = Flow2Blue
+                            tint = Color.White
                         )
                     }
                 }
@@ -621,7 +627,7 @@ fun Flow2HomeScreen(
                 Spacer(
                     modifier =
                         Modifier.height(
-                            18.dp
+                            22.dp
                         )
                 )
 
@@ -630,9 +636,14 @@ fun Flow2HomeScreen(
                         Modifier
                             .fillMaxWidth(),
 
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 10.dp
+                        ),
+
                     shape =
                         RoundedCornerShape(
-                            20.dp
+                            24.dp
                         ),
 
                     colors =
@@ -747,15 +758,25 @@ fun Flow2HomeScreen(
                             Text("Continue review →", fontWeight = FontWeight.Bold)
                         }
 
-                        Spacer(Modifier.height(8.dp))
+                    }
+                }
 
-                        OutlinedButton(
-                            onClick = { navController.navigate("study_packs") },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text("Open study packs", fontWeight = FontWeight.SemiBold)
-                        }
+                }
+
+                Spacer(Modifier.height(18.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    QuickActionTile(Icons.Rounded.Style, "Study", LoopiColors.Blue, Modifier.weight(1f)) {
+                        navController.navigate("review")
+                    }
+                    QuickActionTile(Icons.Rounded.Add, "Add topic", LoopiColors.Teal, Modifier.weight(1f)) {
+                        navController.navigate("add_topic")
+                    }
+                    QuickActionTile(Icons.Rounded.Inventory2, "Packs", LoopiColors.Purple, Modifier.weight(1f)) {
+                        navController.navigate("study_packs")
+                    }
+                    QuickActionTile(Icons.Rounded.Groups, "Groups", LoopiColors.Pink, Modifier.weight(1f)) {
+                        navController.navigate("community")
                     }
                 }
 
@@ -804,7 +825,8 @@ fun Flow2HomeScreen(
                                 .cardColors(
                                     containerColor =
                                         Color.White
-                                )
+                                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
 
                         Column(
@@ -1290,19 +1312,11 @@ fun StudyTopicsScreen(
             }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+
         containerColor =
             Flow2Background,
 
-        topBar = {
-
-            LoopiTopBar(
-                title =
-                    "Study Topics",
-
-                onBack =
-                    null
-            )
-        },
 
         bottomBar = {
 
@@ -1333,13 +1347,7 @@ fun StudyTopicsScreen(
                     Color.White
             ) {
 
-                Text(
-                    text =
-                        "+",
-
-                    fontSize =
-                        28.sp
-                )
+                Icon(Icons.Rounded.Add, contentDescription = "Add topic")
             }
         },
 
@@ -1365,6 +1373,10 @@ fun StudyTopicsScreen(
                 )
         ) {
 
+            LoopiHero(horizontalPadding = 16.dp, height = 150.dp) {
+                Text("Study Topics", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+                Text("Browse, search and organise what you're learning", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+                Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 value =
                     search,
@@ -1387,12 +1399,7 @@ fun StudyTopicsScreen(
                     )
                 },
 
-                leadingIcon = {
-
-                    Text(
-                        "🔍"
-                    )
-                },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = LoopiColors.Muted) },
 
                 trailingIcon = {
 
@@ -1420,8 +1427,19 @@ fun StudyTopicsScreen(
                 },
 
                 singleLine =
-                    true
+                    true,
+
+                shape = RoundedCornerShape(16.dp),
+
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.White
+                )
             )
+            }
+
 
             Spacer(
                 modifier =
@@ -3106,15 +3124,16 @@ private fun CompactTopicRow(
 
     Row(
         modifier = Modifier
+            .padding(vertical = 5.dp)
             .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(18.dp))
+            .background(Color.White, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
             .clickable {
 
                 onClick()
             }
-            .padding(
-                vertical =
-                    8.dp
-            ),
+            .padding(12.dp),
 
         verticalAlignment =
             Alignment
@@ -3189,6 +3208,7 @@ private fun FullTopicRow(
                     containerColor =
                         Color.White
                 ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 
         shape =
             RoundedCornerShape(

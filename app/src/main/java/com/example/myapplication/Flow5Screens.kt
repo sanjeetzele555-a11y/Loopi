@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import androidx.compose.ui.graphics.Brush
 import com.example.myapplication.ui.theme.LoopiColors
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -142,16 +143,35 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
     val visibleRows = topicRows.filter { !showWeakOnly || (it.third?.let { value -> value < 70 } == true) }
         .sortedWith(compareBy<Triple<StudyTopic, List<ReviewResultEntity>, Int?>> { it.third ?: 101 }.thenBy { it.first.title })
 
-    Scaffold(containerColor = ProgressBackground, bottomBar = { LoopiBottomNavigation(navController, selected = "progress") }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 18.dp), contentPadding = PaddingValues(bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Scaffold(contentWindowInsets = WindowInsets(0, 0, 0, 0), containerColor = ProgressBackground, bottomBar = { LoopiBottomNavigation(navController, selected = "progress") }) { padding ->
+        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(start = 18.dp, end = 18.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                ProgressHeader("Your Progress")
+                LoopiHero(horizontalPadding = 18.dp, height = 190.dp) {
+                Text("Your Progress", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+                Text(
+                    overall?.let { "$it% accuracy · ${countLabel(filteredResults.size, "answer")} this period" } ?: "Answer a few questions to see your stats",
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 13.sp
+                )
+                Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ProgressPeriod.entries.forEach { option ->
-                        FilterChip(selected = period == option, onClick = { period = option }, label = { Text(option.label) })
+                        FilterChip(
+                            selected = period == option,
+                            onClick = { period = option },
+                            label = { Text(option.label, fontWeight = FontWeight.SemiBold) },
+                            border = null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Color.White.copy(alpha = 0.16f),
+                                labelColor = Color.White,
+                                selectedContainerColor = Color.White,
+                                selectedLabelColor = ProgressNavy
+                            )
+                        )
                     }
                 }
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp)) {
+                Spacer(Modifier.height(16.dp))
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), shape = RoundedCornerShape(22.dp)) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         Text("Accuracy per answer", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                         Spacer(Modifier.height(14.dp))
@@ -163,7 +183,7 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
                                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
                                         Text(if (bucket.answers > 0) "${bucket.percent}%" else "", color = ProgressMuted, fontSize = 10.sp)
                                         Spacer(Modifier.height(4.dp))
-                                        Box(Modifier.fillMaxWidth().height((bucket.percent.coerceAtLeast(if (bucket.answers > 0) 8 else 2) * 0.85f).dp).background(if (bucket.answers > 0) ProgressBlue else LoopiColors.Track, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)))
+                                        Box(Modifier.fillMaxWidth().height((bucket.percent.coerceAtLeast(if (bucket.answers > 0) 8 else 2) * 0.85f).dp).background(if (bucket.answers > 0) Brush.verticalGradient(listOf(LoopiColors.Purple, ProgressBlue)) else Brush.verticalGradient(listOf(LoopiColors.Track, LoopiColors.Track)), RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)))
                                         Spacer(Modifier.height(5.dp))
                                         Text(bucket.label, color = ProgressMuted, fontSize = 10.sp, maxLines = 1)
                                     }
@@ -171,6 +191,7 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
                             }
                         }
                     }
+                }
                 }
             }
             item {
@@ -199,7 +220,8 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
             }
             val calibration = calculateCalibration(filteredResults)
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(Modifier.fillMaxWidth().padding(15.dp)) {
                         Text("Confidence check", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                         if (calibration == null) {
@@ -224,7 +246,8 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
                 }
             }
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
                     Row(Modifier.fillMaxWidth().padding(15.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                             Text("Average answer time", color = ProgressMuted, fontSize = 13.sp)
@@ -245,7 +268,8 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
             }
             if (visibleRows.isEmpty()) {
                 item {
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                         Text(if (showWeakOnly) "No weak spots in this period. Keep reviewing to maintain your progress." else "No topics are available yet.", color = ProgressMuted, modifier = Modifier.padding(18.dp))
                     }
                 }
@@ -284,7 +308,8 @@ fun Flow5TopicProgressScreen(navController: NavHostController, appState: LoopiAp
                 }
             }
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(18.dp)) {
                     Column(Modifier.padding(16.dp)) {
                         Text("Accuracy per answer", fontWeight = FontWeight.Bold, color = ProgressNavy)
                         Spacer(Modifier.height(12.dp))
@@ -308,7 +333,8 @@ fun Flow5TopicProgressScreen(navController: NavHostController, appState: LoopiAp
                 Text("Recent answers", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 19.sp)
             }
             items(records.takeLast(10).reversed(), key = { it.id }) { record ->
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
                         Text(record.question, color = ProgressNavy, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(if (record.isCorrect) "Correct · ${record.confidence}" else "Incorrect · ${record.confidence}", color = if (record.isCorrect) ProgressTeal else ProgressRed, fontSize = 12.sp)
@@ -361,18 +387,20 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
         if (studyDay == expectedDay) { streak++; expectedDay -= 86_400_000L } else if (studyDay < expectedDay) break
     }
 
-    Scaffold(containerColor = Color.White, bottomBar = { LoopiBottomNavigation(navController, selected = "profile") }) { padding ->
+    Scaffold(contentWindowInsets = WindowInsets(0, 0, 0, 0), containerColor = ProgressBackground, bottomBar = { LoopiBottomNavigation(navController, selected = "profile") }) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 12.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            LoopiHero(horizontalPadding = 22.dp, height = 250.dp) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Loopi", modifier = Modifier.weight(1f), color = ProgressNavy, fontWeight = FontWeight.ExtraBold, fontSize = 29.sp)
-                IconButton(onClick = { showSignOutConfirmation = true }) { Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Log out", tint = ProgressNavy) }
+                Text("Profile", modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                IconButton(onClick = { showSignOutConfirmation = true }) { Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Log out", tint = Color.White) }
             }
             Spacer(Modifier.height(14.dp))
             Box(Modifier.size(106.dp).clickable { imagePicker.launch(arrayOf("image/*")) }) {
-                Surface(shape = RoundedCornerShape(50), color = LoopiColors.BlueSoft, modifier = Modifier.fillMaxSize()) {
+                Surface(shape = RoundedCornerShape(50), color = LoopiColors.BlueSoft, border = androidx.compose.foundation.BorderStroke(4.dp, Color.White), modifier = Modifier.fillMaxSize()) {
                     Box(contentAlignment = Alignment.Center) {
                         if (profileBitmap != null) {
                             androidx.compose.foundation.Image(profileBitmap, contentDescription = "Profile photo", modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(50)), contentScale = ContentScale.Crop)
@@ -386,10 +414,12 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
                 }
             }
             Spacer(Modifier.height(10.dp))
-            Text(fullName.ifBlank { "Loopi learner" }, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 21.sp)
-            Text(email, color = ProgressMuted, fontSize = 14.sp)
+            Text(fullName.ifBlank { "Loopi learner" }, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 21.sp)
+            Text(email, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
             Surface(shape = RoundedCornerShape(24.dp), color = LoopiColors.AmberSoft, modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)) {
                 Text("$streak-day streak 🔥", modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp), color = Color(0xFF8A5A00), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            }
+            }
             }
             Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ProfileStat("${appState.topics.size}", "Topics", Modifier.weight(1f))
@@ -497,7 +527,8 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
 
 @Composable
 private fun ProfileActivityCard(title: String, value: String, caption: String, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp)) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(18.dp)) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(title, color = ProgressMuted, fontSize = 13.sp)
             Text(value, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 23.sp)
@@ -508,7 +539,7 @@ private fun ProfileActivityCard(title: String, value: String, caption: String, m
 
 @Composable
 private fun ProfileStat(value: String, label: String, modifier: Modifier = Modifier) {
-    Surface(modifier, shape = RoundedCornerShape(14.dp), color = ProgressBackground) {
+    Surface(modifier, shape = RoundedCornerShape(16.dp), color = Color.White, shadowElevation = 3.dp) {
         Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(value, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text(label, color = ProgressMuted, fontSize = 12.sp)
@@ -561,7 +592,8 @@ fun Flow6SettingsScreen(navController: NavHostController) {
                 weakAlerts = it; prefs.edit().putBoolean("weak_topic_alerts", it).apply()
             }
             Text("Study preferences", color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp)) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(18.dp)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Daily card goal", color = ProgressNavy, fontWeight = FontWeight.SemiBold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -585,13 +617,15 @@ fun Flow6SettingsScreen(navController: NavHostController) {
             SettingsToggle("Offline mode", "Your study data is already stored on this device; this choice is saved locally.", offlineMode) {
                 offlineMode = it; prefs.edit().putBoolean("offline_mode", it).apply()
             }
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("Data & storage", color = ProgressNavy, fontWeight = FontWeight.SemiBold)
                     Text("Loopi stores your profile and study data locally on this device. There is no cloud sync in this build.", color = ProgressMuted, fontSize = 13.sp)
                 }
             }
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().clickable { navController.navigate("help_support") }, shape = RoundedCornerShape(16.dp)) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth().clickable { navController.navigate("help_support") }, shape = RoundedCornerShape(16.dp)) {
                 Text("Help & Support   ›", modifier = Modifier.padding(16.dp), color = ProgressNavy, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -600,7 +634,8 @@ fun Flow6SettingsScreen(navController: NavHostController) {
 
 @Composable
 private fun SettingsToggle(title: String, detail: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(16.dp)) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(16.dp)) {
         Row(Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, color = ProgressNavy, fontWeight = FontWeight.SemiBold)
@@ -621,7 +656,8 @@ private fun ProgressHeader(title: String, onBack: (() -> Unit)? = null) {
 
 @Composable
 private fun ProgressMetric(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(15.dp)) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(15.dp)) {
         Column(Modifier.fillMaxWidth().padding(13.dp)) {
             Text(label, color = ProgressMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(value, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -631,7 +667,8 @@ private fun ProgressMetric(label: String, value: String, modifier: Modifier = Mo
 
 @Composable
 private fun ProgressTopicCard(title: String, answers: Int, percent: Int?, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(modifier.clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(15.dp)) {
+    Card(modifier.clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), shape = RoundedCornerShape(15.dp)) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f)) {

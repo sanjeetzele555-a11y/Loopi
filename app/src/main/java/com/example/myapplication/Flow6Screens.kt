@@ -294,7 +294,8 @@ fun StudyPacksScreen(navController: NavHostController, flow6State: Flow6AppState
             }
             Spacer(Modifier.height(12.dp))
             if (flow6State.packs.isEmpty()) {
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("📚", fontSize = 38.sp)
                         Spacer(Modifier.height(8.dp))
@@ -358,7 +359,8 @@ fun CreateStudyPackScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(18.dp))
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().clickable {
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth().clickable {
                 topicsError = false
                 navController.navigate("study_pack_topics")
             }) {
@@ -421,7 +423,8 @@ fun SelectStudyPackTopicsScreen(
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 14.dp)) {
                 items(visibleTopics, key = { it.id }) { topic ->
                     val checked = flow6State.draftTopicNames.contains(topic.title)
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().clickable { flow6State.toggleTopic(topic.title) }) {
+                    Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth().clickable { flow6State.toggleTopic(topic.title) }) {
                         Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(checked = checked, onCheckedChange = { flow6State.toggleTopic(topic.title) })
                             Spacer(Modifier.width(8.dp))
@@ -509,7 +512,8 @@ fun StudyPackPreviewScreen(
                     }
                     items(topicNames) { title ->
                         val topic = appState.topics.firstOrNull { it.title.equals(title, ignoreCase = true) }
-                        Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                        Card(colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                             Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(title, color = PackNavy, fontWeight = FontWeight.SemiBold)
@@ -558,6 +562,7 @@ private fun StudyPackCard(pack: StudyPackEntity, onClick: () -> Unit) {
     val topicCount = packTopicNames(pack).size
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
