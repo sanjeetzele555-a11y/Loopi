@@ -54,6 +54,8 @@ dependencies {
 
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.material:material-icons-extended")
+    // Offline PDF text extraction for the PDF-to-quiz feature
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)

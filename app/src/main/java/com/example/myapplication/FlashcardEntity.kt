@@ -27,6 +27,10 @@ data class FlashcardEntity(
     @ColumnInfo(defaultValue = "")
     val explanation: String = "",
 
+    /** Wrong options kept with the card (one per line), e.g. from PDF-generated questions. */
+    @ColumnInfo(defaultValue = "")
+    val wrongOptions: String = "",
+
     val createdAt: Long = System.currentTimeMillis(),
 
     val updatedAt: Long = System.currentTimeMillis()

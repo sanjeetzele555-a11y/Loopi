@@ -1,5 +1,9 @@
 package com.example.myapplication
 
+import androidx.compose.material.icons.rounded.PictureAsPdf
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.Brush
+import androidx.room.withTransaction
 import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import android.content.Intent
@@ -171,6 +175,31 @@ class Flow3AppState(
             flashcardDao
                 .deleteFlashcardById(id)
             if (topicId != null) refreshTopicCardCount(topicId)
+        }
+    }
+
+    /** Saves reviewed PDF questions in one go and keeps the topic's card count in step. */
+    fun addGeneratedFlashcards(
+        topicId: Int,
+        cards: List<GeneratedQuestion>,
+        onSaved: () -> Unit
+    ) {
+        scope.launch {
+            database.withTransaction {
+                cards.forEach { card ->
+                    flashcardDao.insertFlashcard(
+                        FlashcardEntity(
+                            topicId = topicId,
+                            question = card.question.trim(),
+                            answer = card.answer.trim(),
+                            explanation = card.explanation.trim(),
+                            wrongOptions = card.distractors.joinToString(separator = "\n")
+                        )
+                    )
+                }
+                refreshTopicCardCount(topicId)
+            }
+            onSaved()
         }
     }
 
@@ -382,6 +411,40 @@ fun TopicDetailScreen(
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
                 Text("Take a Quiz", fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(
+                Modifier.height(8.dp)
+            )
+
+            // Offline PDF -> multiple-choice questions for this topic.
+            Surface(
+                onClick = {
+                    navController.navigate(
+                        "pdf_quiz/$topicId"
+                    )
+                },
+                shape = RoundedCornerShape(18.dp),
+                color = Color.Transparent,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .background(
+                            Brush.linearGradient(listOf(LoopiColors.Purple, LoopiColors.Blue)),
+                            RoundedCornerShape(18.dp)
+                        )
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Rounded.PictureAsPdf, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Create quiz from PDF", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Upload notes, get MCQs (works offline)", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+                    }
+                    LoopiChevron(Color.White)
+                }
             }
 
             Spacer(

@@ -1354,6 +1354,13 @@ fun LoopiNavigation(
             FlashcardStudyScreen(navController, appState, flow3State, entry.arguments?.getInt("topicId") ?: -1)
         }
 
+        composable(
+            route = "pdf_quiz/{topicId}",
+            arguments = listOf(navArgument("topicId") { type = NavType.IntType })
+        ) { entry ->
+            PdfQuizScreen(navController, appState, flow3State, entry.arguments?.getInt("topicId") ?: -1)
+        }
+
         composable("community") { CommunityScreen(navController, community) }
         composable(
             route = "community_group/{groupId}",

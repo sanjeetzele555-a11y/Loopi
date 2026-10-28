@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ReviewResultEntity::class,
         StudyPackEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 abstract class LoopiDatabase : RoomDatabase() {
@@ -205,6 +205,13 @@ abstract class LoopiDatabase : RoomDatabase() {
                 }
             }
 
+        private val MIGRATION_7_8 =
+            object : Migration(7, 8) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("ALTER TABLE `flashcards` ADD COLUMN `wrongOptions` TEXT NOT NULL DEFAULT ''")
+                }
+            }
+
         fun getDatabase(
             context: Context
         ): LoopiDatabase {
@@ -224,7 +231,8 @@ abstract class LoopiDatabase : RoomDatabase() {
                                 MIGRATION_3_4,
                                 MIGRATION_4_5,
                                 MIGRATION_5_6,
-                                MIGRATION_6_7
+                                MIGRATION_6_7,
+                                MIGRATION_7_8
                             )
                             .build()
 

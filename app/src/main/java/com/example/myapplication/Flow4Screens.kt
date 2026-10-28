@@ -605,9 +605,17 @@ class Flow4AppState(
                 .trim()
         )
 
+        // Cards that carry their own wrong options (PDF questions) use those first.
+        card.wrongOptions
+            .lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.equals(card.answer.trim(), ignoreCase = true) }
+            .take(3)
+            .forEach { options.add(it) }
+
         otherAnswers
             .take(
-                3
+                (4 - options.size).coerceAtLeast(0)
             )
             .forEach {
 
