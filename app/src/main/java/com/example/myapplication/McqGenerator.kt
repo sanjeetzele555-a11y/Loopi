@@ -45,6 +45,45 @@ object McqGenerator {
         .replace(Regex("\\n{3,}"), "\n\n")
         .trim()
 
+    /** Topic name from the document's first heading-like line, else the file name. */
+    fun suggestTitle(rawText: String, fileName: String): String {
+        val heading = cleanText(rawText).lines()
+            .map { it.trim() }
+            .firstOrNull { line ->
+                line.length in 4..60 && line.count { it.isLetter() } >= 4 && !line.endsWith(".") && line.split(" ").size <= 8
+            }
+            // "Operating Systems - Lecture 4: ..." keeps just the subject.
+            ?.split(Regex("\\s+[-\u2013\u2014:|]\\s+|:\\s*"))?.firstOrNull()?.trim()
+        val fromFile = fileName.substringBeforeLast('.').replace(Regex("[_\\-]+"), " ").trim()
+        return (heading?.takeIf { it.length >= 3 } ?: fromFile)
+            .split(" ").joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+            .take(50)
+            .ifBlank { "PDF Notes" }
+    }
+
+    /** First full sentence that reads like content, shortened for the topic card. */
+    fun suggestDescription(rawText: String): String {
+        // Split on line breaks too, so a heading line never gets glued onto the first sentence.
+        val sentence = cleanText(rawText)
+            .split(Regex("(?<=[.!?])\\s+|\\n"))
+            .map { it.trim() }
+            .firstOrNull { it.length in 30..200 && it.split(" ").size >= 6 && it.last() in ".!?" }
+        return (sentence ?: "Generated from PDF notes").take(120)
+    }
+
+    /** Rough category from words in the notes, matching the Add Topic categories. */
+    fun suggestCategory(rawText: String): String {
+        val text = rawText.lowercase()
+        val scores = mapOf(
+            "Computer Science" to listOf("algorithm", "process", "memory", "program", "database", "operating system", "data structure", "software", "compiler"),
+            "Information Technology" to listOf("network", "server", "security", "firewall", "protocol", "cloud", "internet", "router"),
+            "Engineering" to listOf("circuit", "voltage", "force", "mechanical", "electrical", "design", "material"),
+            "Business" to listOf("market", "customer", "profit", "finance", "management", "strategy", "accounting"),
+            "Mathematics" to listOf("equation", "theorem", "matrix", "integral", "derivative", "probability", "function")
+        ).mapValues { (_, words) -> words.sumOf { word -> Regex(Regex.escape(word)).findAll(text).count() } }
+        return scores.maxByOrNull { it.value }?.takeIf { it.value >= 2 }?.key ?: "Other"
+    }
+
     fun generate(rawText: String, maxQuestions: Int = 15): List<GeneratedQuestion> {
         val text = cleanText(rawText)
         if (text.length < 80) return emptyList()

@@ -93,6 +93,12 @@ fun PdfQuizScreen(
     var step by remember { mutableStateOf<PdfStep>(PdfStep.Pick) }
     val questions = remember { mutableStateListOf<EditableQuestion>() }
     var saving by remember { mutableStateOf(false) }
+    // topicId < 0 means "create a new topic from this PDF" (opened from Add Topic).
+    val newTopic = topicId < 0
+    var draftTitle by remember { mutableStateOf("") }
+    var draftDescription by remember { mutableStateOf("") }
+    var draftCategory by remember { mutableStateOf("Other") }
+    val titleTaken = newTopic && appState.topics.any { it.title.trim().equals(draftTitle.trim(), ignoreCase = true) }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -102,7 +108,12 @@ fun PdfQuizScreen(
             val result = runCatching {
                 val text = extractPdfText(context, uri)
                 if (text.isBlank()) error("This PDF has no readable text. It may be a scanned image; try a PDF exported from slides or notes.")
-                withContext(Dispatchers.Default) { McqGenerator.generate(text, maxQuestions = 15) }
+                if (newTopic) {
+                    draftTitle = McqGenerator.suggestTitle(text, name)
+                    draftDescription = McqGenerator.suggestDescription(text)
+                    draftCategory = McqGenerator.suggestCategory(text)
+                }
+                withContext(Dispatchers.Default) { McqGenerator.generate(text, maxQuestions = if (newTopic) 20 else 15) }
             }
             result.onSuccess { generated ->
                 if (generated.isEmpty()) {
@@ -121,7 +132,7 @@ fun PdfQuizScreen(
 
     Scaffold(
         containerColor = LoopiColors.Background,
-        topBar = { LoopiSimpleTopBar("Quiz from PDF") { navController.popBackStack() } },
+        topBar = { LoopiSimpleTopBar(if (newTopic) "New Topic from PDF" else "Quiz from PDF") { navController.popBackStack() } },
         bottomBar = {
             val review = step as? PdfStep.Review
             if (review != null) {
@@ -133,6 +144,21 @@ fun PdfQuizScreen(
                             val chosen = questions
                                 .filter { it.selected && it.question.isNotBlank() && it.answer.isNotBlank() }
                                 .map { GeneratedQuestion(it.question, it.answer, it.distractors, it.explanation) }
+                            if (newTopic) {
+                                flow3State.createTopicFromPdf(
+                                    title = draftTitle,
+                                    description = draftDescription.ifBlank { "Generated from ${review.fileName}" },
+                                    category = draftCategory,
+                                    cards = chosen,
+                                    fileName = review.fileName,
+                                    fileUri = review.uri.toString()
+                                ) { createdId ->
+                                    navController.navigate("topic_detail/$createdId") {
+                                        popUpTo("add_topic") { inclusive = true }
+                                    }
+                                }
+                                return@Button
+                            }
                             // Keep the PDF with the topic's resources so it can be opened again.
                             flow3State.addResource(
                                 topicId = topicId,
@@ -150,7 +176,7 @@ fun PdfQuizScreen(
                                 }
                             }
                         },
-                        enabled = count > 0 && !saving,
+                        enabled = count > 0 && !saving && (!newTopic || (draftTitle.isNotBlank() && !titleTaken)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -158,7 +184,11 @@ fun PdfQuizScreen(
                             .padding(horizontal = 18.dp, vertical = 12.dp)
                             .height(54.dp)
                     ) {
-                        Text("Save ${countLabel(count, "question")} as flashcards", fontWeight = FontWeight.Bold)
+                        Text(
+                            if (newTopic) "Create topic with ${countLabel(count, "card")}"
+                            else "Save ${countLabel(count, "question")} as flashcards",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -166,7 +196,7 @@ fun PdfQuizScreen(
     ) { padding ->
         when (val current = step) {
             PdfStep.Pick, is PdfStep.Failed -> PdfPickPanel(
-                topicTitle = topic?.title ?: "this topic",
+                topicTitle = topic?.title ?: if (newTopic) "a new topic" else "this topic",
                 error = (current as? PdfStep.Failed)?.message,
                 modifier = Modifier.padding(padding),
                 onPick = { picker.launch(arrayOf("application/pdf")) }
@@ -200,6 +230,23 @@ fun PdfQuizScreen(
                                 fontSize = 13.sp
                             )
                         }
+                    }
+                }
+                if (newTopic) {
+                    item {
+                        NewTopicDetailsCard(
+                            title = draftTitle,
+                            onTitle = { draftTitle = it.take(50) },
+                            description = draftDescription,
+                            onDescription = { draftDescription = it.take(160) },
+                            category = draftCategory,
+                            onCategory = { draftCategory = it },
+                            titleError = when {
+                                draftTitle.isBlank() -> "Give the topic a name"
+                                titleTaken -> "You already have a topic with this name"
+                                else -> null
+                            }
+                        )
                     }
                 }
                 itemsIndexed(questions) { index, item -> GeneratedQuestionCard(index + 1, item) }
@@ -301,6 +348,66 @@ private fun GeneratedQuestionCard(number: Int, item: EditableQuestion) {
                             Text(option, color = LoopiColors.Red, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+private val pdfTopicCategories = listOf("Computer Science", "Information Technology", "Engineering", "Business", "Mathematics", "Other")
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun NewTopicDetailsCard(
+    title: String,
+    onTitle: (String) -> Unit,
+    description: String,
+    onDescription: (String) -> Unit,
+    category: String,
+    onCategory: (String) -> Unit,
+    titleError: String?
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TopicIconTile(title = title.ifBlank { "Topic" }, category = category, size = 40.dp)
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text("New topic", color = LoopiColors.Navy, fontWeight = FontWeight.Bold)
+                    Text("Filled in from the PDF. Change anything you like.", color = LoopiColors.Muted, fontSize = 12.sp)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = title,
+                onValueChange = onTitle,
+                label = { Text("Topic title *") },
+                singleLine = true,
+                isError = titleError != null,
+                supportingText = { titleError?.let { Text(it) } },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = description,
+                onValueChange = onDescription,
+                label = { Text("Description") },
+                minLines = 2,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(10.dp))
+            Text("Category", color = LoopiColors.Navy, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Spacer(Modifier.height(6.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                pdfTopicCategories.forEach { option ->
+                    FilterChip(
+                        selected = option == category,
+                        onClick = { onCategory(option) },
+                        label = { Text(option, fontSize = 12.sp, maxLines = 1) }
+                    )
                 }
             }
         }

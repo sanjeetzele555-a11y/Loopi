@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -2386,6 +2387,44 @@ private fun TopicFormScreen(
                         8.dp
                     )
             )
+
+            // New topics can also be built straight from a PDF of notes.
+            if (initialTopic == null) {
+                Surface(
+                    onClick = { navController.navigate("pdf_quiz/-1") },
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .background(
+                                Brush.linearGradient(listOf(LoopiColors.Purple, LoopiColors.Blue)),
+                                RoundedCornerShape(18.dp)
+                            )
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.PictureAsPdf, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Create from a PDF instead", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Loopi fills in the topic and its quiz cards for you", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+                        }
+                        LoopiChevron(Color.White)
+                    }
+                }
+
+                Text(
+                    text = "or fill it in yourself",
+                    color = LoopiColors.Muted,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Text(
                 text =

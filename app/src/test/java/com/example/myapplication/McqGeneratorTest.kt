@@ -51,4 +51,16 @@ class McqGeneratorTest {
     fun brokenLineHyphensAreJoined() {
         assertEquals("normalization", McqGenerator.cleanText("normal-\nization"))
     }
+
+    @Test
+    fun newTopicDetailsComeFromTheHeadingAndFirstSentence() {
+        assertEquals("Database Systems", McqGenerator.suggestTitle(notes, "week3.pdf"))
+        assertTrue(McqGenerator.suggestDescription(notes).startsWith("Normalization is the process"))
+        assertEquals("Computer Science", McqGenerator.suggestCategory(notes))
+    }
+
+    @Test
+    fun fileNameIsUsedWhenThereIsNoHeading() {
+        assertEquals("Os Lecture 4", McqGenerator.suggestTitle("this is just a long running sentence of text.", "os_lecture-4.pdf"))
+    }
 }

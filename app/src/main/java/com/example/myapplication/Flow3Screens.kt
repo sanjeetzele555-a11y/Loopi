@@ -203,6 +203,55 @@ class Flow3AppState(
         }
     }
 
+    /** Creates a topic, its reviewed PDF questions and the PDF resource together. */
+    fun createTopicFromPdf(
+        title: String,
+        description: String,
+        category: String,
+        cards: List<GeneratedQuestion>,
+        fileName: String,
+        fileUri: String,
+        onSaved: (Int) -> Unit
+    ) {
+        scope.launch {
+            val topicId = database.withTransaction {
+                val id = topicDao.insertTopic(
+                    TopicEntity(
+                        title = title.trim(),
+                        description = description.trim(),
+                        category = category,
+                        difficulty = "Medium",
+                        numberOfCards = cards.size,
+                        targetCardCount = cards.size
+                    )
+                ).toInt()
+                cards.forEach { card ->
+                    flashcardDao.insertFlashcard(
+                        FlashcardEntity(
+                            topicId = id,
+                            question = card.question.trim(),
+                            answer = card.answer.trim(),
+                            explanation = card.explanation.trim(),
+                            wrongOptions = card.distractors.joinToString(separator = "\n")
+                        )
+                    )
+                }
+                resourceDao.insertResource(
+                    ResourceEntity(
+                        topicId = id,
+                        type = "File",
+                        title = fileName.removeSuffix(".pdf"),
+                        fileUri = fileUri,
+                        description = "Source PDF for this topic's ${countLabel(cards.size, "question")}.",
+                        tags = "pdf"
+                    )
+                )
+                id
+            }
+            onSaved(topicId)
+        }
+    }
+
     private suspend fun refreshTopicCardCount(topicId: Int) {
         val topic = topicDao.getTopicById(topicId) ?: return
         val count = flashcardDao.getFlashcardCountForTopic(topicId)
@@ -341,7 +390,7 @@ fun TopicDetailScreen(
 
             Text(
                 text =
-                    "${topic.numberOfCards} cards • $resourceCount resources",
+                    "${countLabel(flashcardCount, "card")} • ${countLabel(resourceCount, "resource")}",
 
                 color =
                     Color.Gray,
