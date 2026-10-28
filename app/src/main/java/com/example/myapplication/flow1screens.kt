@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -34,13 +35,13 @@ import java.util.Base64
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-private val LoopiBlue = Color(0xFF123B8F)
-private val LoopiBrightBlue = Color(0xFF0878F9)
-private val LoopiYellow = Color(0xFFFFBC32)
-private val LoopiPink = Color(0xFFE85CB3)
-private val LoopiGreen = Color(0xFF19B995)
-private val LoopiRed = Color(0xFFE53935)
-private val LoopiBackground = Color(0xFFF8FAFF)
+private val LoopiBlue = LoopiColors.Navy
+private val LoopiBrightBlue = LoopiColors.Blue
+private val LoopiYellow = LoopiColors.Amber
+private val LoopiPink = LoopiColors.Pink
+private val LoopiGreen = LoopiColors.Teal
+private val LoopiRed = LoopiColors.Red
+private val LoopiBackground = LoopiColors.Background
 
 private const val PREFS_NAME = "loopi_auth"
 
@@ -146,8 +147,16 @@ fun SplashScreen(
 
         delay(1500)
 
+        // Returning users with an active session skip onboarding.
+        val prefs = getAuthPreferences(navController.context)
+        val destination = when {
+            !prefs.getBoolean("logged_in", false) -> "welcome"
+            !prefs.getBoolean("setup_completed", false) -> "first_time_setup"
+            else -> "home"
+        }
+
         navController.navigate(
-            "welcome"
+            destination
         ) {
 
             popUpTo(

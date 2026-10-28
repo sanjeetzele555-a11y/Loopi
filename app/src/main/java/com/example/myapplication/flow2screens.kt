@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import androidx.room.withTransaction
 import androidx.compose.foundation.background
@@ -33,14 +34,14 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val Flow2Blue = Color(0xFF123B8F)
-private val Flow2BrightBlue = Color(0xFF0878F9)
-private val Flow2Green = Color(0xFF18B89A)
-private val Flow2Yellow = Color(0xFFFFBC32)
-private val Flow2Pink = Color(0xFFE85CB3)
-private val Flow2Purple = Color(0xFF8B5CF6)
-private val Flow2Red = Color(0xFFEF4444)
-private val Flow2Background = Color(0xFFF8FAFF)
+private val Flow2Blue = LoopiColors.Navy
+private val Flow2BrightBlue = LoopiColors.Blue
+private val Flow2Green = LoopiColors.Teal
+private val Flow2Yellow = LoopiColors.Amber
+private val Flow2Pink = LoopiColors.Pink
+private val Flow2Purple = LoopiColors.Purple
+private val Flow2Red = LoopiColors.Red
+private val Flow2Background = LoopiColors.Background
 
 data class StudyTopic(
     val id: Int,
@@ -1355,7 +1356,7 @@ fun StudyTopicsScreen(
                     navController,
 
                 selected =
-                    "home"
+                    "topics"
             )
         },
 
@@ -3166,41 +3167,7 @@ private fun CompactTopicRow(
                 .CenterVertically
     ) {
 
-        Box(
-            modifier = Modifier
-                .size(
-                    40.dp
-                )
-                .background(
-                    color =
-                        topicColor(
-                            topic.category
-                        )
-                            .copy(
-                                alpha =
-                                    0.15f
-                            ),
-
-                    shape =
-                        RoundedCornerShape(
-                            10.dp
-                        )
-                ),
-
-            contentAlignment =
-                Alignment.Center
-        ) {
-
-            Text(
-                text =
-                    topicEmoji(
-                        topic.category
-                    ),
-
-                fontSize =
-                    22.sp
-            )
-        }
+        TopicIconTile(title = topic.title, category = topic.category, size = 40.dp)
 
         Spacer(
             modifier =
@@ -3295,41 +3262,7 @@ private fun FullTopicRow(
                     .CenterVertically
         ) {
 
-            Box(
-                modifier = Modifier
-                    .size(
-                        46.dp
-                    )
-                    .background(
-                        color =
-                            topicColor(
-                                topic.category
-                            )
-                                .copy(
-                                    alpha =
-                                        0.15f
-                                ),
-
-                        shape =
-                            RoundedCornerShape(
-                                12.dp
-                            )
-                    ),
-
-                contentAlignment =
-                    Alignment.Center
-            ) {
-
-                Text(
-                    text =
-                        topicEmoji(
-                            topic.category
-                        ),
-
-                    fontSize =
-                        24.sp
-                )
-            }
+            TopicIconTile(title = topic.title, category = topic.category, size = 46.dp)
 
             Spacer(
                 modifier =
@@ -3527,33 +3460,6 @@ private fun LoopiTopBar(
                     48.dp
                 )
         )
-    }
-}
-
-@Composable
-fun LoopiBottomNavigation(
-    navController: NavHostController,
-    selected: String
-) {
-    val destinations = listOf(
-        Triple("home", "⌂", "Home"),
-        Triple("review", "✓", "Review"),
-        Triple("progress", "▥", "Stats"),
-        Triple("profile", "○", "Profile")
-    )
-    NavigationBar(containerColor = Color.White) {
-        destinations.forEach { (route, icon, label) ->
-            NavigationBarItem(
-                selected = selected == route,
-                onClick = {
-                    navController.navigate(route) {
-                        launchSingleTop = true
-                    }
-                },
-                icon = { Text(icon, fontSize = 22.sp) },
-                label = { Text(label) }
-            )
-        }
     }
 }
 

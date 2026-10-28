@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,11 +31,11 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
-private val PackNavy = Color(0xFF123B8F)
-private val PackBlue = Color(0xFF0878F9)
-private val PackTeal = Color(0xFF18B89A)
-private val PackBackground = Color(0xFFF5F8FD)
-private val PackMuted = Color(0xFF71809F)
+private val PackNavy = LoopiColors.Navy
+private val PackBlue = LoopiColors.Blue
+private val PackTeal = LoopiColors.Teal
+private val PackBackground = LoopiColors.Background
+private val PackMuted = LoopiColors.Muted
 
 class Flow6AppState(context: android.content.Context, private val scope: CoroutineScope) {
     private val dao = LoopiDatabase.getDatabase(context.applicationContext).studyPackDao()
@@ -465,7 +466,7 @@ private fun StudyPackCard(pack: StudyPackEntity, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(48.dp).background(Color(0xFFEAF3FF), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(48.dp).background(LoopiColors.BlueSoft, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
                 Text("📚", fontSize = 23.sp)
             }
             Spacer(Modifier.width(12.dp))

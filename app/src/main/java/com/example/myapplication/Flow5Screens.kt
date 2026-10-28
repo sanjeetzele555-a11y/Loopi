@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,12 +37,12 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val ProgressNavy = Color(0xFF123B8F)
-private val ProgressBlue = Color(0xFF0878F9)
-private val ProgressTeal = Color(0xFF18B89A)
-private val ProgressRed = Color(0xFFEF4444)
-private val ProgressBackground = Color(0xFFF5F8FD)
-private val ProgressMuted = Color(0xFF71809F)
+private val ProgressNavy = LoopiColors.Navy
+private val ProgressBlue = LoopiColors.Blue
+private val ProgressTeal = LoopiColors.Teal
+private val ProgressRed = LoopiColors.Red
+private val ProgressBackground = LoopiColors.Background
+private val ProgressMuted = LoopiColors.Muted
 
 internal enum class ProgressPeriod(val label: String, val days: Int?) {
     Week("Week", 7), Month("Month", 30), AllTime("All time", null)
@@ -130,7 +131,7 @@ fun Flow5ProgressScreen(navController: NavHostController, appState: LoopiAppStat
                                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
                                         Text(if (bucket.answers > 0) "${bucket.percent}%" else "", color = ProgressMuted, fontSize = 10.sp)
                                         Spacer(Modifier.height(4.dp))
-                                        Box(Modifier.fillMaxWidth().height((bucket.percent.coerceAtLeast(if (bucket.answers > 0) 8 else 2) * 0.85f).dp).background(if (bucket.answers > 0) ProgressBlue else Color(0xFFE6EDF8), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)))
+                                        Box(Modifier.fillMaxWidth().height((bucket.percent.coerceAtLeast(if (bucket.answers > 0) 8 else 2) * 0.85f).dp).background(if (bucket.answers > 0) ProgressBlue else LoopiColors.Track, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)))
                                         Spacer(Modifier.height(5.dp))
                                         Text(bucket.label, color = ProgressMuted, fontSize = 10.sp, maxLines = 1)
                                     }
@@ -296,7 +297,7 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
             }
             Spacer(Modifier.height(14.dp))
             Box(Modifier.size(106.dp).clickable { imagePicker.launch(arrayOf("image/*")) }) {
-                Surface(shape = RoundedCornerShape(50), color = Color(0xFFDCE8FF), modifier = Modifier.fillMaxSize()) {
+                Surface(shape = RoundedCornerShape(50), color = LoopiColors.BlueSoft, modifier = Modifier.fillMaxSize()) {
                     Box(contentAlignment = Alignment.Center) {
                         if (profileBitmap != null) {
                             androidx.compose.foundation.Image(profileBitmap, contentDescription = "Profile photo", modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(50)), contentScale = ContentScale.Crop)
@@ -312,7 +313,7 @@ fun Flow5ProfileScreen(navController: NavHostController, appState: LoopiAppState
             Spacer(Modifier.height(10.dp))
             Text(fullName.ifBlank { "Loopi learner" }, color = ProgressNavy, fontWeight = FontWeight.Bold, fontSize = 21.sp)
             Text(email, color = ProgressMuted, fontSize = 14.sp)
-            Surface(shape = RoundedCornerShape(24.dp), color = Color(0xFFFFF2CF), modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)) {
+            Surface(shape = RoundedCornerShape(24.dp), color = LoopiColors.AmberSoft, modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)) {
                 Text("$streak-day streak 🔥", modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp), color = Color(0xFF855400), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
             ProfileMenuRow("✎", "Edit Profile", onClick = {
@@ -435,7 +436,7 @@ private fun ProfileMenuRow(icon: String, title: String, destructive: Boolean = f
         Text(title, modifier = Modifier.weight(1f), color = color, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
         if (!destructive) Text("›", color = ProgressMuted, fontSize = 25.sp)
     }
-    HorizontalDivider(color = Color(0xFFE8EDF5))
+    HorizontalDivider(color = LoopiColors.Border)
 }
 
 @Composable
@@ -583,7 +584,7 @@ private fun ProgressTopicCard(title: String, answers: Int, percent: Int?, modifi
                 Text(percent?.let { "$it%" } ?: "—", color = if (percent != null && percent < 70) ProgressRed else ProgressNavy, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(progress = { (percent ?: 0) / 100f }, modifier = Modifier.fillMaxWidth().height(7.dp), color = if (percent != null && percent < 70) ProgressRed else ProgressTeal, trackColor = Color(0xFFE6EDF8))
+            LinearProgressIndicator(progress = { (percent ?: 0) / 100f }, modifier = Modifier.fillMaxWidth().height(7.dp), color = if (percent != null && percent < 70) ProgressRed else ProgressTeal, trackColor = LoopiColors.Track)
         }
     }
 }

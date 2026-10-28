@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -33,11 +34,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val F3Blue = Color(0xFF123B8F)
-private val F3BrightBlue = Color(0xFF0878F9)
-private val F3Green = Color(0xFF14B89A)
-private val F3Red = Color(0xFFEF4444)
-private val F3Background = Color(0xFFF8FAFF)
+private val F3Blue = LoopiColors.Navy
+private val F3BrightBlue = LoopiColors.Blue
+private val F3Green = LoopiColors.Teal
+private val F3Red = LoopiColors.Red
+private val F3Background = LoopiColors.Background
 
 class Flow3AppState(
     context: Context,
@@ -295,23 +296,7 @@ fun TopicDetailScreen(
                 }
             )
 
-            Box(
-                modifier = Modifier
-                    .size(76.dp)
-                    .background(
-                        Color(0xFFEAF3FF),
-                        RoundedCornerShape(18.dp)
-                    ),
-
-                contentAlignment =
-                    Alignment.Center
-            ) {
-
-                Text(
-                    text = "🗄️",
-                    fontSize = 38.sp
-                )
-            }
+            TopicIconTile(title = topic.title, category = topic.category, size = 76.dp)
 
             Spacer(
                 Modifier.height(14.dp)
@@ -348,7 +333,7 @@ fun TopicDetailScreen(
                     TextAlign.Center,
 
                 color =
-                    Color(0xFF566074)
+                    LoopiColors.Muted
             )
 
             Spacer(

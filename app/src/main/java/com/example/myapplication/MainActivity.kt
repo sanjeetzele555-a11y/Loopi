@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
+import com.example.myapplication.ui.theme.LoopiTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            MaterialTheme {
+            LoopiTheme {
 
                 val navController =
                     rememberNavController()
@@ -1364,7 +1366,7 @@ private fun LoopiFlowSuccessScreen(
         Text(
             text = emoji,
             fontSize = 75.sp,
-            color = Color(0xFF18B89A)
+            color = LoopiColors.Teal
         )
 
         Spacer(
@@ -1381,7 +1383,7 @@ private fun LoopiFlowSuccessScreen(
                 FontWeight.Bold,
 
             color =
-                Color(0xFF123B8F),
+                LoopiColors.Navy,
 
             textAlign =
                 TextAlign.Center
@@ -1458,7 +1460,7 @@ private fun LoopiPlaceholderScreen(
                 FontWeight.Bold,
 
             color =
-                Color(0xFF123B8F)
+                LoopiColors.Navy
         )
 
         Spacer(

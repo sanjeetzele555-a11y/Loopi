@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import android.os.SystemClock
 import androidx.room.withTransaction
@@ -32,37 +33,37 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 private val ReviewBlue =
-    Color(0xFF123B8F)
+    LoopiColors.Navy
 
 private val ReviewBrightBlue =
-    Color(0xFF0878F9)
+    LoopiColors.Blue
 
 private val ReviewGreen =
-    Color(0xFF18B89A)
+    LoopiColors.Teal
 
 private val ReviewLightGreen =
-    Color(0xFFE7F8F3)
+    LoopiColors.TealSoft
 
 private val ReviewRed =
-    Color(0xFFEF4444)
+    LoopiColors.Red
 
 private val ReviewLightRed =
-    Color(0xFFFFEBEE)
+    LoopiColors.RedSoft
 
 private val ReviewYellow =
-    Color(0xFFFFBC32)
+    LoopiColors.Amber
 
 private val ReviewLightYellow =
-    Color(0xFFFFF6D9)
+    LoopiColors.AmberSoft
 
 private val ReviewPurple =
-    Color(0xFF8B5CF6)
+    LoopiColors.Purple
 
 private val ReviewBackground =
-    Color(0xFFF8FAFF)
+    LoopiColors.Background
 
 private val ReviewBorder =
-    Color(0xFFE1E7F0)
+    LoopiColors.Border
 
 
 /* =========================================================
@@ -1147,41 +1148,7 @@ fun ChooseReviewTopicScreen(
                                         .CenterVertically
                             ) {
 
-                                Box(
-                                    modifier = Modifier
-                                        .size(
-                                            46.dp
-                                        )
-                                        .background(
-                                            color =
-                                                topicReviewColor(
-                                                    topic.category
-                                                )
-                                                    .copy(
-                                                        alpha =
-                                                            0.16f
-                                                    ),
-
-                                            shape =
-                                                RoundedCornerShape(
-                                                    12.dp
-                                                )
-                                        ),
-
-                                    contentAlignment =
-                                        Alignment.Center
-                                ) {
-
-                                    Text(
-                                        text =
-                                            topicReviewEmoji(
-                                                topic.category
-                                            ),
-
-                                        fontSize =
-                                            23.sp
-                                    )
-                                }
+                                TopicIconTile(title = topic.title, category = topic.category, size = 46.dp)
 
                                 Spacer(
                                     modifier =
