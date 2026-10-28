@@ -1,5 +1,17 @@
 package com.example.myapplication
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.rounded.EventAvailable
+import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Style
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import androidx.room.withTransaction
@@ -598,12 +610,10 @@ fun Flow2HomeScreen(
                         }
                     ) {
 
-                        Text(
-                            text =
-                                "🔔",
-
-                            fontSize =
-                                25.sp
+                        Icon(
+                            Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Flow2Blue
                         )
                     }
                 }
@@ -651,75 +661,10 @@ fun Flow2HomeScreen(
                                     .CenterVertically
                         ) {
 
-                            Box(
-                                modifier = Modifier
-                                    .size(
-                                        95.dp
-                                    )
-                                    .background(
-                                        color =
-                                            Color(
-                                                0xFFEAFBF8
-                                            ),
-
-                                        shape =
-                                            CircleShape
-                                    ),
-
-                                contentAlignment =
-                                    Alignment.Center
-                            ) {
-
-                                Column(
-                                    horizontalAlignment =
-                                        Alignment
-                                            .CenterHorizontally
-                                ) {
-
-                                    Text(
-                                        text =
-                                            "$reviewedCards/$totalCards",
-
-                                        fontSize =
-                                            22.sp,
-
-                                        fontWeight =
-                                            FontWeight
-                                                .Bold,
-
-                                        color =
-                                            Flow2Blue
-                                    )
-
-                                    Text(
-                                        text =
-                                            "cards reviewed",
-
-                                        fontSize =
-                                            10.sp,
-
-                                        color =
-                                            Color.Gray
-                                    )
-
-                                    Text(
-                                        text =
-                                            "$overallProgress%",
-
-                                        fontWeight =
-                                            FontWeight
-                                                .Bold,
-
-                                        color =
-                                            Flow2Green
-                                    )
-                                    Text(
-                                        text = "Today $dailyReviewed/$dailyGoal",
-                                        fontSize = 10.sp,
-                                        color = Color.Gray
-                                    )
-                                }
-                            }
+                            DailyGoalRing(
+                                reviewed = dailyReviewed,
+                                goal = dailyGoal
+                            )
 
                             Spacer(
                                 modifier =
@@ -738,7 +683,10 @@ fun Flow2HomeScreen(
 
                                 DashboardStat(
                                     icon =
-                                        "🔥",
+                                        Icons.Rounded.LocalFireDepartment,
+
+                                    tint =
+                                        LoopiColors.Amber,
 
                                     value =
                                         appState
@@ -751,7 +699,10 @@ fun Flow2HomeScreen(
 
                                 DashboardStat(
                                     icon =
-                                        "✅",
+                                        Icons.Rounded.EventAvailable,
+
+                                    tint =
+                                        LoopiColors.Teal,
 
                                     value =
                                         topicsDue
@@ -764,14 +715,16 @@ fun Flow2HomeScreen(
 
                                 DashboardStat(
                                     icon =
-                                        "📚",
+                                        Icons.Rounded.Style,
+
+                                    tint =
+                                        LoopiColors.Blue,
 
                                     value =
-                                        totalCards
-                                            .toString(),
+                                        "$reviewedCards/$totalCards",
 
                                     label =
-                                        "total cards"
+                                        "cards seen ($overallProgress%)"
                                 )
                             }
                         }
@@ -787,7 +740,8 @@ fun Flow2HomeScreen(
                             onClick = {
                                 navController.navigate("review")
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Flow2Blue)
                         ) {
                             Text("Continue review →", fontWeight = FontWeight.Bold)
@@ -797,7 +751,8 @@ fun Flow2HomeScreen(
 
                         OutlinedButton(
                             onClick = { navController.navigate("study_packs") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Text("Open study packs", fontWeight = FontWeight.SemiBold)
                         }
@@ -3058,66 +3013,65 @@ private fun TopicFormScreen(
 
 @Composable
 private fun DashboardStat(
-    icon: String,
+    icon: ImageVector,
+    tint: Color,
     value: String,
     label: String
 ) {
-
     Row(
-        modifier =
-            Modifier.padding(
-                vertical =
-                    4.dp
-            ),
-
-        verticalAlignment =
-            Alignment
-                .CenterVertically
+        modifier = Modifier.padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(tint.copy(alpha = 0.13f), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
+        }
+        Spacer(Modifier.width(10.dp))
+        Column {
+            Text(text = value, fontWeight = FontWeight.Bold, color = Flow2Blue, fontSize = 16.sp)
+            Text(text = label, fontSize = 11.sp, color = LoopiColors.Muted)
+        }
+    }
+}
 
-        Text(
-            text =
-                icon,
-
-            fontSize =
-                19.sp
-        )
-
-        Spacer(
-            modifier =
-                Modifier.width(
-                    7.dp
-                )
-        )
-
-        Text(
-            text =
-                value,
-
-            fontWeight =
-                FontWeight.Bold,
-
-            color =
-                Flow2Blue
-        )
-
-        Spacer(
-            modifier =
-                Modifier.width(
-                    5.dp
-                )
-        )
-
-        Text(
-            text =
-                label,
-
-            fontSize =
-                12.sp,
-
-            color =
-                Color.Gray
-        )
+/** Today's reviews against the daily goal, drawn as a ring. */
+@Composable
+private fun DailyGoalRing(
+    reviewed: Int,
+    goal: Int
+) {
+    val fraction = if (goal > 0) (reviewed.toFloat() / goal).coerceIn(0f, 1f) else 0f
+    val animated by animateFloatAsState(fraction, tween(900), label = "goal")
+    Box(
+        modifier = Modifier.size(124.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = 12.dp.toPx()
+            drawArc(
+                color = LoopiColors.Track,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(stroke)
+            )
+            drawArc(
+                brush = Brush.sweepGradient(listOf(LoopiColors.Teal, LoopiColors.Blue, LoopiColors.Teal)),
+                startAngle = -90f,
+                sweepAngle = 360f * animated,
+                useCenter = false,
+                style = Stroke(stroke, cap = StrokeCap.Round)
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("$reviewed/$goal", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Flow2Blue)
+            Text("today's goal", fontSize = 10.sp, color = LoopiColors.Muted)
+            Text("${(fraction * 100).toInt()}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = LoopiColors.Teal)
+        }
     }
 }
 

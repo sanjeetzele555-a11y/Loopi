@@ -340,29 +340,48 @@ fun TopicDetailScreen(
                 Modifier.height(18.dp)
             )
 
+            // Quick facts about the topic, as in wireframe 3A.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TopicStatTile(flashcardCount.toString(), "Flashcards", Modifier.weight(1f))
+                TopicStatTile(resourceCount.toString(), "Resources", Modifier.weight(1f))
+                TopicStatTile(topic.difficulty.ifBlank { "Medium" }, "Difficulty", Modifier.weight(1f))
+                TopicStatTile("${topic.progress}%", "Accuracy", Modifier.weight(1f))
+            }
+
+            Spacer(
+                Modifier.height(16.dp)
+            )
+
             Button(
                 onClick = {
-
                     navController.navigate(
-                        "review"
+                        "flashcard_study/$topicId"
                     )
                 },
-
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor =
-                            F3BrightBlue
-                    )
+                enabled = flashcardCount > 0,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = F3BrightBlue)
             ) {
+                Text("Start Studying", fontWeight = FontWeight.Bold)
+            }
 
-                Text(
-                    "Start Review",
-                    fontWeight =
-                        FontWeight.Bold
-                )
+            Spacer(
+                Modifier.height(8.dp)
+            )
+
+            OutlinedButton(
+                onClick = {
+                    navController.navigate(
+                        "review_settings/$topicId"
+                    )
+                },
+                enabled = flashcardCount > 0,
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Text("Take a Quiz", fontWeight = FontWeight.Bold)
             }
 
             Spacer(
@@ -403,6 +422,38 @@ fun TopicDetailScreen(
                     "topic_settings/$topicId"
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TopicStatTile(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = Color.White
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                color = F3Blue,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                maxLines = 1
+            )
+            Text(
+                text = label,
+                color = LoopiColors.Muted,
+                fontSize = 11.sp,
+                maxLines = 1
+            )
         }
     }
 }

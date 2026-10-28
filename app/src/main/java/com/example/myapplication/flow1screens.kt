@@ -1,5 +1,19 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.myapplication.ui.theme.LoopiColors
 import android.content.Context
 import androidx.compose.foundation.Canvas
@@ -279,39 +293,33 @@ fun WelcomeScreen(
                 Modifier.height(22.dp)
         )
 
-        Text(
-            text = "🎓📚",
-            fontSize = 74.sp
-        )
+        Box(
+            modifier = Modifier
+                .size(190.dp)
+                .background(
+                    Brush.radialGradient(listOf(LoopiColors.BlueSoft, LoopiBackground)),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "🎓📚",
+                fontSize = 66.sp
+            )
+        }
 
         Spacer(
             modifier =
                 Modifier.height(24.dp)
         )
 
-        FeatureRow(
-            "✦",
-            "Study smarter",
-            LoopiBlue
-        )
+        FeatureRow(Icons.Rounded.AutoAwesome, "Study smarter", "Flashcards and quizzes you create", LoopiBrightBlue)
 
-        FeatureRow(
-            "🔥",
-            "Find weak topics",
-            LoopiPink
-        )
+        FeatureRow(Icons.Rounded.LocalFireDepartment, "Find weak topics", "Practise where you need it most", LoopiRed)
 
-        FeatureRow(
-            "✓",
-            "Track your progress",
-            LoopiBlue
-        )
+        FeatureRow(Icons.Rounded.Insights, "Track your progress", "Accuracy, streaks and confidence", LoopiPink)
 
-        FeatureRow(
-            "◉",
-            "Works offline",
-            LoopiGreen
-        )
+        FeatureRow(Icons.Rounded.WifiOff, "Works offline", "Everything stays on your phone", LoopiGreen)
 
         Spacer(
             modifier =
@@ -331,12 +339,12 @@ fun WelcomeScreen(
                 .height(54.dp),
 
             shape =
-                RoundedCornerShape(12.dp),
+                RoundedCornerShape(16.dp),
 
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor =
-                        LoopiBrightBlue
+                        LoopiBlue
                 )
         ) {
 
@@ -459,6 +467,10 @@ fun SignInScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = email,
 
             onValueChange = {
@@ -505,6 +517,10 @@ fun SignInScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = password,
 
             onValueChange = {
@@ -541,23 +557,8 @@ fun SignInScreen(
 
             trailingIcon = {
 
-                TextButton(
-                    onClick = {
-
-                        passwordVisible =
-                            !passwordVisible
-                    }
-                ) {
-
-                    Text(
-                        if (
-                            passwordVisible
-                        ) {
-                            "Hide"
-                        } else {
-                            "Show"
-                        }
-                    )
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, contentDescription = if (passwordVisible) "Hide password" else "Show password", tint = LoopiColors.Muted)
                 }
             },
 
@@ -746,35 +747,19 @@ fun SignInScreen(
                 Modifier.height(14.dp)
         )
 
-        Text(
-            text = "or",
-
-            modifier =
-                Modifier.align(
-                    Alignment.CenterHorizontally
-                ),
-
-            color = Color.Gray
-        )
-
-        Spacer(
-            modifier =
-                Modifier.height(10.dp)
-        )
-
-        OutlinedButton(
-            onClick = {
-                generalError = "Google sign-in is not configured in this offline build. Use your local email and password."
-            },
-
-            modifier =
-                Modifier.fillMaxWidth()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LoopiColors.TealSoft, RoundedCornerShape(14.dp))
+                .padding(14.dp)
         ) {
-
+            Icon(Icons.Rounded.WifiOff, contentDescription = null, tint = LoopiGreen, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
             Text(
-                text =
-                    "Google sign-in unavailable",
-                color = Color.DarkGray
+                text = "Your account and study data stay on this phone. No internet needed.",
+                fontSize = 13.sp,
+                color = LoopiColors.Ink
             )
         }
 
@@ -897,6 +882,10 @@ fun SignUpScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = LoopiColors.Muted) },
+
             value =
                 fullName,
 
@@ -937,6 +926,10 @@ fun SignUpScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = email,
 
             onValueChange = {
@@ -982,6 +975,10 @@ fun SignUpScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = password,
 
             onValueChange = {
@@ -1017,23 +1014,8 @@ fun SignUpScreen(
 
             trailingIcon = {
 
-                TextButton(
-                    onClick = {
-
-                        passwordVisible =
-                            !passwordVisible
-                    }
-                ) {
-
-                    Text(
-                        if (
-                            passwordVisible
-                        ) {
-                            "Hide"
-                        } else {
-                            "Show"
-                        }
-                    )
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, contentDescription = if (passwordVisible) "Hide password" else "Show password", tint = LoopiColors.Muted)
                 }
             },
 
@@ -1361,6 +1343,10 @@ fun ForgotPasswordScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = email,
 
             onValueChange = {
@@ -1399,6 +1385,10 @@ fun ForgotPasswordScreen(
         Spacer(Modifier.height(12.dp))
         AuthLabel("Recovery code")
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = recoveryCode,
             onValueChange = { recoveryCode = it.trim().uppercase(); emailError = null },
             modifier = Modifier.fillMaxWidth(),
@@ -1588,6 +1578,10 @@ fun ResetPasswordScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = LoopiColors.Muted) },
+
             value = password,
 
             onValueChange = {
@@ -1618,23 +1612,8 @@ fun ResetPasswordScreen(
 
             trailingIcon = {
 
-                TextButton(
-                    onClick = {
-
-                        passwordVisible =
-                            !passwordVisible
-                    }
-                ) {
-
-                    Text(
-                        if (
-                            passwordVisible
-                        ) {
-                            "Hide"
-                        } else {
-                            "Show"
-                        }
-                    )
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, contentDescription = if (passwordVisible) "Hide password" else "Show password", tint = LoopiColors.Muted)
                 }
             },
 
@@ -1659,6 +1638,10 @@ fun ResetPasswordScreen(
         )
 
         OutlinedTextField(
+            shape = RoundedCornerShape(14.dp),
+            colors = authFieldColors(),
+            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = LoopiColors.Muted) },
+
             value =
                 confirmPassword,
 
@@ -2186,52 +2169,41 @@ private fun ErrorMessage(
 
 @Composable
 private fun FeatureRow(
-    symbol: String,
-    text: String,
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
     color: Color
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                vertical = 9.dp
-            ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+            .padding(vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Text(
-            text =
-                symbol,
-
-            fontSize = 22.sp,
-
-            color = color,
-
-            modifier =
-                Modifier.width(42.dp),
-
-            textAlign =
-                TextAlign.Center
-        )
-
-        Text(
-            text = text,
-
-            fontSize = 16.sp,
-
-            fontWeight =
-                FontWeight.Medium,
-
-            color =
-                Color(
-                    0xFF1D2540
-                )
-        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(color.copy(alpha = 0.12f), RoundedCornerShape(14.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column {
+            Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = LoopiColors.Ink)
+            Text(text = subtitle, fontSize = 13.sp, color = LoopiColors.Muted)
+        }
     }
 }
+
+@Composable
+private fun authFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = Color.White,
+    unfocusedContainerColor = Color.White,
+    errorContainerColor = LoopiColors.RedSoft.copy(alpha = 0.4f),
+    focusedBorderColor = LoopiColors.Blue,
+    unfocusedBorderColor = LoopiColors.Border
+)
 
 @Composable
 private fun SuccessScreenLayout(

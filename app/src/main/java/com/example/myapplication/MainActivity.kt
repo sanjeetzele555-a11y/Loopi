@@ -1347,6 +1347,13 @@ fun LoopiNavigation(
            FLOW 7 — COMMUNITY
            ===================================================== */
 
+        composable(
+            route = "flashcard_study/{topicId}",
+            arguments = listOf(navArgument("topicId") { type = NavType.IntType })
+        ) { entry ->
+            FlashcardStudyScreen(navController, appState, flow3State, entry.arguments?.getInt("topicId") ?: -1)
+        }
+
         composable("community") { CommunityScreen(navController, community) }
         composable(
             route = "community_group/{groupId}",
